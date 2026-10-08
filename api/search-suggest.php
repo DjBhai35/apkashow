@@ -1,6 +1,6 @@
 <?php
 /**
- * CinemaVault - Live Search Suggestion API
+ * ApkaShow - Live Search Suggestion API
  * Returns JSON suggestions for instant search typing
  */
 header('Content-Type: application/json; charset=utf-8');

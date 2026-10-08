@@ -1,6 +1,6 @@
 <?php
 /**
- * CinemaVault - Admin Accounts & Users Manager
+ * ApkaShow - Admin Accounts & Users Manager
  * Allows managing staff users, changing passwords with Bcrypt hashing
  */
 require_once __DIR__ . '/../includes/functions.php';
@@ -8,6 +8,7 @@ require_admin_auth();
 
 $db = getDB();
 $currentAdmin = get_current_admin();
+$isForced = isset($_GET['force']) && $_GET['force'] == 1;
 
 $errors = [];
 
@@ -27,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Current and new password are required.';
             } elseif ($newPass !== $confirmPass) {
                 $errors[] = 'New password and confirmation do not match.';
-            } elseif (strlen($newPass) < 6) {
-                $errors[] = 'Password must be at least 6 characters in length.';
+            } elseif (strlen($newPass) < 8) {
+                $errors[] = 'Security standard: New password must be at least 8 characters in length.';
             } else {
                 $uStmt = $db->prepare("SELECT * FROM `users` WHERE `id` = ? LIMIT 1");
                 $uStmt->execute([$currentAdmin['id']]);
@@ -36,10 +37,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($user && password_verify($currentPass, $user['password'])) {
                     $newHash = password_hash($newPass, PASSWORD_BCRYPT);
-                    $upStmt = $db->prepare("UPDATE `users` SET `password` = ? WHERE `id` = ?");
+                    $upStmt = $db->prepare("UPDATE `users` SET `password` = ?, `force_password_change` = 0 WHERE `id` = ?");
                     $upStmt->execute([$newHash, $currentAdmin['id']]);
-                    set_flash('success', 'Your password was updated successfully.');
-                    header("Location: " . BASE_URL . "/admin/users.php");
+                    
+                    // Update current session
+                    $_SESSION[ADMIN_SESSION_KEY]['force_password_change'] = 0;
+
+                    set_flash('success', 'Your password was securely updated. Account is fully active.');
+                    header("Location: " . BASE_URL . "/admin/index.php");
                     exit();
                 } else {
                     $errors[] = 'Incorrect current password.';
@@ -54,6 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($username) || empty($email) || empty($password)) {
                 $errors[] = 'Username, email and password are required.';
+            } elseif (strlen($password) < 8) {
+                $errors[] = 'Temporary password must be at least 8 characters.';
             } else {
                 // Check duplicate
                 $dup = $db->prepare("SELECT id FROM `users` WHERE `username` = ? OR `email` = ?");
@@ -62,9 +69,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $errors[] = 'Username or email already exists.';
                 } else {
                     $passHash = password_hash($password, PASSWORD_BCRYPT);
-                    $ins = $db->prepare("INSERT INTO `users` (`username`, `email`, `password`, `full_name`, `role`, `status`) VALUES (?, ?, ?, ?, ?, 1)");
+                    $ins = $db->prepare("INSERT INTO `users` (`username`, `email`, `password`, `full_name`, `role`, `status`, `force_password_change`) VALUES (?, ?, ?, ?, ?, 1, 1)");
                     $ins->execute([$username, $email, $passHash, $fullName, $role]);
-                    set_flash('success', "New user '{$username}' added successfully.");
+                    set_flash('success', "New user '{$username}' added successfully. They will be prompted to set a new password on first login.");
                     header("Location: " . BASE_URL . "/admin/users.php");
                     exit();
                 }
@@ -76,11 +83,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Fetch all staff users
 $users = $db->query("SELECT id, username, email, full_name, role, status, created_at FROM `users` ORDER BY id ASC")->fetchAll();
 
-$adminTitle = "Admin Users - CinemaVault Studio";
-$pageHeading = "Staff & Authentication Management";
+$adminTitle = "Admin Users - ApkaShow Studio";
+$pageHeading = "Staff & Authentication Security";
 
 require_once __DIR__ . '/header.php';
 ?>
+
+<?php if ($isForced): ?>
+    <div class="alert alert-warning bg-warning bg-opacity-15 border-warning text-warning mb-4">
+        <i class="bi bi-shield-exclamation me-2 fs-5"></i>
+        <strong>Action Required:</strong> You must change your temporary administrator password to a personal secure password (minimum 8 characters) before continuing.
+    </div>
+<?php endif; ?>
 
 <?php if (!empty($errors)): ?>
     <div class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-25 text-danger mb-4">
@@ -95,7 +109,7 @@ require_once __DIR__ . '/header.php';
 <div class="row g-4">
     <!-- Left: Change Password Form -->
     <div class="col-lg-6">
-        <div class="glass-card p-4 mb-4">
+        <div class="glass-card p-4 mb-4 border-primary border-opacity-25">
             <h5 class="fw-bold text-white mb-2"><i class="bi bi-key-fill text-warning me-2"></i>Change Your Password</h5>
             <p class="text-muted small mb-4">Updating password for logged-in user: <strong><?php echo e($currentAdmin['username']); ?></strong></p>
 
@@ -105,21 +119,21 @@ require_once __DIR__ . '/header.php';
 
                 <div class="mb-3">
                     <label class="form-label text-light small fw-bold">Current Password</label>
-                    <input type="password" name="current_password" class="form-control bg-dark border-secondary text-white" placeholder="••••••••" required>
+                    <input type="password" name="current_password" class="form-control bg-dark border-secondary text-white" placeholder="••••••••" required autofocus>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label text-light small fw-bold">New Password</label>
-                    <input type="password" name="new_password" class="form-control bg-dark border-secondary text-white" placeholder="••••••••" required>
+                    <label class="form-label text-light small fw-bold">New Secure Password (min 8 chars)</label>
+                    <input type="password" name="new_password" class="form-control bg-dark border-secondary text-white" placeholder="••••••••" required minlength="8">
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label text-light small fw-bold">Confirm New Password</label>
-                    <input type="password" name="confirm_password" class="form-control bg-dark border-secondary text-white" placeholder="••••••••" required>
+                    <input type="password" name="confirm_password" class="form-control bg-dark border-secondary text-white" placeholder="••••••••" required minlength="8">
                 </div>
 
                 <button type="submit" class="btn btn-cinema w-100 py-2">
-                    <i class="bi bi-shield-lock-fill me-1"></i> Update Password
+                    <i class="bi bi-shield-lock-fill me-1"></i> Update Password Now
                 </button>
             </form>
         </div>
@@ -145,12 +159,12 @@ require_once __DIR__ . '/header.php';
 
                 <div class="mb-3">
                     <label class="form-label text-light small fw-bold">Email Address</label>
-                    <input type="email" name="email" class="form-control bg-dark border-secondary text-white" placeholder="jane@cinemavault.com" required>
+                    <input type="email" name="email" class="form-control bg-dark border-secondary text-white" placeholder="jane@apkashow.com" required>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label text-light small fw-bold">Temporary Password</label>
-                    <input type="password" name="password" class="form-control bg-dark border-secondary text-white" placeholder="••••••••" required>
+                    <label class="form-label text-light small fw-bold">Temporary Password (min 8 chars)</label>
+                    <input type="password" name="password" class="form-control bg-dark border-secondary text-white" placeholder="••••••••" required minlength="8">
                 </div>
 
                 <div class="mb-4">

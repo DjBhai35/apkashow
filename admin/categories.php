@@ -1,6 +1,6 @@
 <?php
 /**
- * CinemaVault - Admin Dynamic Categories Manager
+ * ApkaShow - Admin Dynamic Categories Manager
  * Add, edit, delete categories, change slugs, customize icons and SEO metadata
  */
 require_once __DIR__ . '/../includes/functions.php';
@@ -94,7 +94,7 @@ $catsStmt = $db->query("SELECT c.*, COUNT(m.id) as movies_count
                         ORDER BY c.display_order ASC, c.name ASC");
 $allCategories = $catsStmt->fetchAll();
 
-$adminTitle = "Categories Manager - CinemaVault Studio";
+$adminTitle = "Categories Manager - ApkaShow Studio";
 $pageHeading = "Dynamic Category Management";
 
 require_once __DIR__ . '/header.php';
@@ -148,7 +148,7 @@ require_once __DIR__ . '/header.php';
 
                 <div class="mb-3">
                     <label class="form-label text-light small fw-bold">SEO Meta Title</label>
-                    <input type="text" name="meta_title" class="form-control bg-dark border-secondary text-white" value="<?php echo e($editCategory['meta_title'] ?? ''); ?>" placeholder="Billionaire Movies | CinemaVault">
+                    <input type="text" name="meta_title" class="form-control bg-dark border-secondary text-white" value="<?php echo e($editCategory['meta_title'] ?? ''); ?>" placeholder="Billionaire Movies | ApkaShow">
                 </div>
 
                 <div class="mb-3">

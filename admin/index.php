@@ -1,6 +1,6 @@
 <?php
 /**
- * CinemaVault - Admin Control Center Dashboard
+ * ApkaShow - Admin Control Center Dashboard
  */
 require_once __DIR__ . '/../includes/functions.php';
 require_admin_auth();
@@ -23,7 +23,7 @@ $recentMessages = $recentMessagesStmt->fetchAll();
 $topMoviesStmt = $db->query("SELECT m.*, c.name as category_name FROM movies m LEFT JOIN categories c ON m.category_id = c.id ORDER BY m.views_count DESC LIMIT 5");
 $topMovies = $topMoviesStmt->fetchAll();
 
-$adminTitle = "Dashboard - CinemaVault Studio";
+$adminTitle = "Dashboard - ApkaShow Studio";
 $pageHeading = "Executive Overview";
 
 require_once __DIR__ . '/header.php';

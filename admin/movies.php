@@ -1,6 +1,6 @@
 <?php
 /**
- * CinemaVault - Admin Movie Manager (List, Search, Status Toggle, Delete)
+ * ApkaShow - Admin Movie Manager (List, Search, Status Toggle, Delete)
  */
 require_once __DIR__ . '/../includes/functions.php';
 require_admin_auth();
@@ -76,7 +76,7 @@ $movies = $listStmt->fetchAll();
 // All Categories for dropdown filter
 $allCats = $db->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll();
 
-$adminTitle = "Movies Catalog Manager - CinemaVault";
+$adminTitle = "Movies Catalog Manager - ApkaShow";
 $pageHeading = "Movies Catalog Management";
 
 require_once __DIR__ . '/header.php';

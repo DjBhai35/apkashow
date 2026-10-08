@@ -1,6 +1,7 @@
 <?php
 /**
- * CinemaVault - Core Application Functions & Security Helpers
+ * ApkaShow - Core Application Functions & Security Helpers
+ * Domain: apkashow.com
  */
 
 require_once __DIR__ . '/db.php';
@@ -43,17 +44,11 @@ function verify_csrf_token($token) {
  * Generate URL-friendly slug
  */
 function slugify($text) {
-    // Replace non letter or digits by -
     $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-    // Transliterate
     $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-    // Remove unwanted characters
     $text = preg_replace('~[^-\w]+~', '', $text);
-    // Trim
     $text = trim($text, '-');
-    // Remove duplicate -
     $text = preg_replace('~-+~', '-', $text);
-    // Lowercase
     $text = strtolower($text);
     return empty($text) ? 'n-a-' . time() : $text;
 }
@@ -74,13 +69,12 @@ function get_all_settings() {
             $settings[$row['key_name']] = $row['key_value'];
         }
     } catch (Exception $e) {
-        // Fallback defaults
         $settings = [
-            'site_name' => 'CinemaVault',
-            'site_tagline' => 'Stream Premium Motivational, Billionaire & Cinematic Cinema',
+            'site_name' => 'ApkaShow',
+            'site_tagline' => 'Stream Premium Motivational, Billionaire & Cinematic Masterpieces',
             'whatsapp_number' => '+1234567890',
-            'whatsapp_message' => 'Hello CinemaVault!',
-            'site_logo_text' => 'CINEMA<span class="text-gradient">VAULT</span>'
+            'whatsapp_message' => 'Hello ApkaShow! I would like to inquire about movies.',
+            'site_logo_text' => 'APKA<span class="text-gradient">SHOW</span>'
         ];
     }
     return $settings;
@@ -109,7 +103,7 @@ function set_setting($key, $value) {
 function get_whatsapp_url() {
     $rawPhone = get_setting('whatsapp_number', '+1234567890');
     $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
-    $defaultMessage = get_setting('whatsapp_message', 'Hello CinemaVault!');
+    $defaultMessage = get_setting('whatsapp_message', 'Hello ApkaShow!');
     return 'https://api.whatsapp.com/send?phone=' . urlencode($cleanPhone) . '&text=' . urlencode($defaultMessage);
 }
 
@@ -135,6 +129,15 @@ function require_admin_auth() {
         header("Location: " . BASE_URL . "/admin/login.php");
         exit();
     }
+    
+    // Check if first-time password change is required
+    $user = get_current_admin();
+    $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
+    if (!empty($user['force_password_change']) && $currentPage !== 'users.php' && $currentPage !== 'logout.php') {
+        set_flash('warning', 'Security Alert: You must update your admin password before proceeding.');
+        header("Location: " . BASE_URL . "/admin/users.php?force=1");
+        exit();
+    }
 }
 
 /**
@@ -142,7 +145,7 @@ function require_admin_auth() {
  */
 function set_flash($type, $message) {
     $_SESSION['flash_message'] = [
-        'type' => $type, // 'success', 'danger', 'warning', 'info'
+        'type' => $type,
         'message' => $message
     ];
 }
@@ -168,12 +171,11 @@ function format_views($count) {
     } elseif ($count >= 1000) {
         return round($count / 1000, 1) . 'K';
     }
-    return number_format($count);
+    return number_format((int)$count);
 }
 
 /**
  * Secure Image File Uploader
- * Validates mime-types, size limits, and sanitizes filenames.
  */
 function upload_image_file($fileArray, $targetFolder = 'movies', $maxBytes = 5242880) {
     if (empty($fileArray) || $fileArray['error'] !== UPLOAD_ERR_OK) {
@@ -210,7 +212,7 @@ function upload_image_file($fileArray, $targetFolder = 'movies', $maxBytes = 524
 }
 
 /**
- * Resolve Image URL (detects external https:// or local assets/uploads/)
+ * Resolve Image URL
  */
 function resolve_image_url($url, $placeholder = 'poster') {
     if (empty($url)) {
@@ -223,4 +225,11 @@ function resolve_image_url($url, $placeholder = 'poster') {
         return $url;
     }
     return BASE_URL . '/' . ltrim($url, '/');
+}
+
+/**
+ * Build Canonical URL for production (https://apkashow.com/...)
+ */
+function canonical_url_for($path) {
+    return CANONICAL_DOMAIN . '/' . ltrim($path, '/');
 }

@@ -1,6 +1,7 @@
 <?php
 /**
- * CinemaVault - Header & Navigation Template
+ * ApkaShow - Header & Navigation Template
+ * Production Domain: apkashow.com
  */
 require_once __DIR__ . '/functions.php';
 
@@ -13,21 +14,21 @@ try {
     $navCategories = [];
 }
 
-$siteName = get_setting('site_name', 'CinemaVault Elite');
-$siteLogoText = get_setting('site_logo_text', 'CINEMA<span class="text-gradient">VAULT</span>');
+$siteName = get_setting('site_name', 'ApkaShow');
+$siteLogoText = get_setting('site_logo_text', 'APKA<span class="text-gradient">SHOW</span>');
 $whatsAppUrl = get_whatsapp_url();
 $headerAd = get_setting('header_ad_code', '');
 
-$currentPage = basename($_SERVER['PHP_SELF']);
+$currentPage = basename($_SERVER['PHP_SELF'] ?? '');
 $currentSlug = $_GET['slug'] ?? '';
 $searchQuery = $_GET['q'] ?? '';
 
 // SEO Metadata Defaults
-$metaTitle = $pageTitle ?? get_setting('meta_title_default', 'CinemaVault | Premium Movies, Billionaire Mindset & Cinema Hub');
-$metaDescription = $pageDescription ?? get_setting('meta_description_default', 'Explore curated high-definition cinema, motivational billionaire stories, Wall Street dramas, forex mastery, and blockbuster movies.');
-$metaKeywords = $pageKeywords ?? get_setting('meta_keywords_default', 'movies, billionaire movies, forex cinema, mindset films, motivational movies, bollywood, hollywood, streaming');
+$metaTitle = $pageTitle ?? get_setting('meta_title_default', 'ApkaShow | Watch Premium Movies, Billionaire Mindset & Cinema Hub');
+$metaDescription = $pageDescription ?? get_setting('meta_description_default', 'Explore curated high-definition cinema, motivational billionaire stories, Wall Street dramas, and blockbuster movies on ApkaShow.');
+$metaKeywords = $pageKeywords ?? get_setting('meta_keywords_default', 'apkashow, apka show, movies, billionaire movies, forex cinema, mindset films, motivational movies, bollywood, hollywood, streaming');
 $metaImage = $pageImage ?? (BASE_URL . '/assets/images/og-preview.jpg');
-$canonicalUrl = $pageCanonical ?? (BASE_URL . '/' . ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
+$canonicalUrl = $pageCanonical ?? canonical_url_for(ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -89,12 +90,12 @@ $canonicalUrl = $pageCanonical ?? (BASE_URL . '/' . ltrim($_SERVER['REQUEST_URI'
         </a>
 
         <!-- Mobile Toggle Button -->
-        <button class="navbar-toggler border-0 text-white shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#cinemaNavbar" aria-controls="cinemaNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler border-0 text-white shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#apkaNavbar" aria-controls="apkaNavbar" aria-expanded="false" aria-label="Toggle navigation">
             <i class="bi bi-list fs-1 text-light"></i>
         </button>
 
         <!-- Navbar Links & Search -->
-        <div class="collapse navbar-collapse" id="cinemaNavbar">
+        <div class="collapse navbar-collapse" id="apkaNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-xl-0 align-items-xl-center">
                 <li class="nav-item">
                     <a class="nav-link <?php echo ($currentPage === 'index.php' && empty($currentSlug)) ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/index.php">
@@ -168,7 +169,7 @@ $canonicalUrl = $pageCanonical ?? (BASE_URL . '/' . ltrim($_SERVER['REQUEST_URI'
                 </form>
 
                 <!-- WhatsApp Button (Controlled Completely From Admin Panel) -->
-                <a href="<?php echo e($whatsAppUrl); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp px-3 py-2 text-nowrap w-100 w-xl-auto text-center" title="Chat with CinemaVault on WhatsApp">
+                <a href="<?php echo e($whatsAppUrl); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp px-3 py-2 text-nowrap w-100 w-xl-auto text-center" title="Chat with ApkaShow on WhatsApp">
                     <i class="bi bi-whatsapp fs-5"></i>
                     <span>WhatsApp</span>
                 </a>

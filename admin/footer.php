@@ -1,6 +1,6 @@
         </div> <!-- /p-4 container -->
         <footer class="p-3 text-center text-muted small border-top border-secondary border-opacity-25 mt-auto">
-            &copy; <?php echo date('Y'); ?> CinemaVault Studio Management Suite. Production Build v2.4.
+            &copy; <?php echo date('Y'); ?> ApkaShow Studio Management Suite. Production Build v3.0 &bull; <a href="https://apkashow.com" target="_blank" class="text-secondary text-decoration-none">apkashow.com</a>
         </footer>
     </div>
 </div>

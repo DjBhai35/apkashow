@@ -1,6 +1,6 @@
 <?php
 /**
- * CinemaVault - Admin Contact Messages / Inquiries Manager
+ * ApkaShow - Admin Contact Messages / Inquiries Manager
  */
 require_once __DIR__ . '/../includes/functions.php';
 require_admin_auth();
@@ -35,7 +35,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'toggle_read') {
 $stmt = $db->query("SELECT * FROM `contact_messages` ORDER BY `id` DESC");
 $messages = $stmt->fetchAll();
 
-$adminTitle = "User Inquiries - CinemaVault Studio";
+$adminTitle = "User Inquiries - ApkaShow Studio";
 $pageHeading = "User Contact Messages & Inquiries";
 
 require_once __DIR__ . '/header.php';

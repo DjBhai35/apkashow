@@ -1,6 +1,6 @@
 <?php
 /**
- * CinemaVault - Admin Add & Edit Movie
+ * ApkaShow - Admin Add & Edit Movie
  * Supports comprehensive fields: Slug, Poster Upload/URL, Banner Upload/URL, Video embed,
  * Legal stream, Legal download, Category, Genre, Language, SEO fields, status.
  */
@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$adminTitle = ($isEditing ? "Edit Movie" : "Add New Movie") . " - CinemaVault";
+$adminTitle = ($isEditing ? "Edit Movie" : "Add New Movie") . " - ApkaShow";
 $pageHeading = $isEditing ? "Edit Movie: " . $movie['title'] : "Add New Movie Title";
 
 require_once __DIR__ . '/header.php';

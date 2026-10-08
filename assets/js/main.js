@@ -1,5 +1,5 @@
 /**
- * CinemaVault - Interactive Frontend Logic & Animations
+ * ApkaShow - Interactive Frontend Logic & Animations
  */
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,6 +1,6 @@
 <?php
 /**
- * CinemaVault - Admin Authentication & Authorization
+ * ApkaShow - Admin Authentication & Authorization
  * Session security, login verification, CSRF checking
  */
 require_once __DIR__ . '/../includes/functions.php';
@@ -9,18 +9,18 @@ require_once __DIR__ . '/../includes/functions.php';
 require_admin_auth();
 
 $adminUser = get_current_admin();
-$adminCurrentPage = basename($_SERVER['PHP_SELF']);
+$adminCurrentPage = basename($_SERVER['PHP_SELF'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $adminTitle ?? 'CinemaVault Admin Studio'; ?></title>
+    <title><?php echo $adminTitle ?? 'ApkaShow Admin Studio'; ?></title>
     <!-- Bootstrap 5.3.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- CinemaVault Custom Style -->
+    <!-- ApkaShow Custom Cinematic Style -->
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/cinematic.css">
     <style>
         body { background-color: #080b11; }
@@ -40,7 +40,7 @@ $adminCurrentPage = basename($_SERVER['PHP_SELF']);
         <div class="d-flex align-items-center gap-2 mb-4 px-2 py-2 border-bottom border-secondary border-opacity-25">
             <span class="fs-4">🎬</span>
             <div class="brand-font fw-bold text-white fs-5">
-                CINEMA<span class="text-danger">ADMIN</span>
+                APKA<span class="text-danger">SHOW</span> <small class="text-muted fs-6">ADMIN</small>
             </div>
         </div>
 
@@ -86,7 +86,7 @@ $adminCurrentPage = basename($_SERVER['PHP_SELF']);
             <div class="d-flex align-items-center gap-3">
                 <div class="text-end d-none d-sm-block">
                     <div class="text-white small fw-bold"><?php echo e($adminUser['full_name'] ?? 'Administrator'); ?></div>
-                    <small class="text-muted"><?php echo e($adminUser['email'] ?? 'admin@cinemavault.com'); ?></small>
+                    <small class="text-muted"><?php echo e($adminUser['email'] ?? 'admin@apkashow.com'); ?></small>
                 </div>
                 <div class="bg-danger text-white rounded-circle p-2 px-3 fw-bold">
                     <i class="bi bi-person-fill"></i>

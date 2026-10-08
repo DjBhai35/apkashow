@@ -1,12 +1,13 @@
 <?php
 /**
- * CinemaVault - Footer Template
+ * ApkaShow - Footer Template
+ * Production Domain: apkashow.com
  */
 $footerAd = get_setting('footer_ad_code', '');
-$footerCopyright = get_setting('footer_copyright', '&copy; 2026 CinemaVault Elite Media. All rights reserved.');
+$footerCopyright = get_setting('footer_copyright', '&copy; 2026 ApkaShow Elite Media. All rights reserved.');
 $whatsAppUrl = get_whatsapp_url();
-$siteName = get_setting('site_name', 'CinemaVault Elite');
-$siteLogoText = get_setting('site_logo_text', 'CINEMA<span class="text-gradient">VAULT</span>');
+$siteName = get_setting('site_name', 'ApkaShow');
+$siteLogoText = get_setting('site_logo_text', 'APKA<span class="text-gradient">SHOW</span>');
 ?>
 </main> <!-- /main -->
 
@@ -18,7 +19,7 @@ $siteLogoText = get_setting('site_logo_text', 'CINEMA<span class="text-gradient"
 <?php endif; ?>
 
 <!-- Floating WhatsApp Action Button for Mobile & Desktop -->
-<a href="<?php echo e($whatsAppUrl); ?>" target="_blank" rel="noopener noreferrer" class="floating-whatsapp" title="Instant WhatsApp Support">
+<a href="<?php echo e($whatsAppUrl); ?>" target="_blank" rel="noopener noreferrer" class="floating-whatsapp" title="Instant ApkaShow WhatsApp Support">
     <i class="bi bi-whatsapp"></i>
 </a>
 
@@ -33,7 +34,7 @@ $siteLogoText = get_setting('site_logo_text', 'CINEMA<span class="text-gradient"
                     <span class="brand-font fs-4 fw-bold text-white"><?php echo $siteLogoText; ?></span>
                 </div>
                 <p class="text-muted small pe-lg-4">
-                    The premier destination for motivational cinema, billionaire documentaries, forex trading thrillers, and blockbuster entertainment. Curated exclusively for ambitious high-performers.
+                    The premier destination for motivational cinema, billionaire documentaries, forex trading thrillers, and blockbuster entertainment. Curated exclusively for ambitious high-performers on ApkaShow.
                 </p>
                 <div class="d-flex gap-3 text-secondary mt-3">
                     <a href="<?php echo e($whatsAppUrl); ?>" target="_blank" class="text-muted text-hover-light fs-5"><i class="bi bi-whatsapp"></i></a>
@@ -82,7 +83,7 @@ $siteLogoText = get_setting('site_logo_text', 'CINEMA<span class="text-gradient"
                 </div>
                 <div class="d-flex align-items-center gap-2 mb-3">
                     <i class="bi bi-envelope text-info fs-5"></i>
-                    <span class="text-muted small"><?php echo e(get_setting('contact_email', 'contact@cinemavault.com')); ?></span>
+                    <span class="text-muted small"><?php echo e(get_setting('contact_email', 'contact@apkashow.com')); ?></span>
                 </div>
                 <div class="d-flex flex-wrap gap-2 pt-1">
                     <a href="<?php echo BASE_URL; ?>/about.php" class="btn btn-outline-secondary btn-sm">About Us</a>

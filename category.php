@@ -1,7 +1,8 @@
 <?php
 /**
- * CinemaVault - Dynamic Category Page
+ * ApkaShow - Dynamic Category Page
  * Supports pagination, SEO titles, descriptions, and grid filtering
+ * Domain: apkashow.com
  */
 require_once __DIR__ . '/includes/functions.php';
 
@@ -21,7 +22,6 @@ if (!empty($slug) && $slug !== 'all') {
     $category = $catStmt->fetch();
 
     if (!$category) {
-        // Fallback: If not found, redirect to homepage or show 404
         header("Location: " . BASE_URL . "/index.php");
         exit();
     }
@@ -49,20 +49,20 @@ $movies = $movieStmt->fetchAll();
 
 // Dynamic SEO Setup
 if ($category) {
-    $pageTitle = !empty($category['meta_title']) ? $category['meta_title'] : ($category['name'] . ' Movies | Watch Online HD | CinemaVault');
-    $pageDescription = !empty($category['meta_description']) ? $category['meta_description'] : ('Explore the best ' . $category['name'] . ' movies, complete cast info, synopsis, and legal streaming links on CinemaVault.');
+    $pageTitle = !empty($category['meta_title']) ? $category['meta_title'] : ($category['name'] . ' Movies | Watch Online HD | ApkaShow');
+    $pageDescription = !empty($category['meta_description']) ? $category['meta_description'] : ('Explore the best ' . $category['name'] . ' movies, complete cast info, synopsis, and legal streaming links on ApkaShow.');
     $catName = $category['name'];
     $catDesc = $category['description'];
     $catIcon = $category['icon'] ?: 'bi-film';
 } else {
-    $pageTitle = 'All Movies Archive | CinemaVault Elite';
-    $pageDescription = 'Browse the complete cinematic library of motivational, billionaire, action, thriller, and drama films on CinemaVault.';
+    $pageTitle = 'All Movies Archive | ApkaShow';
+    $pageDescription = 'Browse the complete cinematic library of motivational, billionaire, action, thriller, and drama films on ApkaShow.';
     $catName = 'All Movies';
-    $catDesc = 'Browse the entire CinemaVault collection across all genres and languages.';
+    $catDesc = 'Browse the entire ApkaShow collection across all genres and languages.';
     $catIcon = 'bi-collection-play';
 }
 
-$pageCanonical = BASE_URL . '/category.php?slug=' . urlencode($slug ?: 'all');
+$pageCanonical = canonical_url_for('/category/' . urlencode($slug ?: 'all'));
 
 require_once __DIR__ . '/includes/header.php';
 ?>

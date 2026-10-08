@@ -1,7 +1,8 @@
 <?php
 /**
- * CinemaVault - Homepage
+ * ApkaShow - Homepage
  * Production-ready dynamic homepage featuring banners, categories, and curated movie collections
+ * Domain: apkashow.com
  */
 require_once __DIR__ . '/includes/functions.php';
 
@@ -23,14 +24,14 @@ $latestMovies = $latestStmt->fetchAll();
 $popularStmt = $db->query("SELECT * FROM `movies` WHERE `status` = 1 AND `is_popular` = 1 ORDER BY `views_count` DESC, `rating` DESC LIMIT 6");
 $popularMovies = $popularStmt->fetchAll();
 
-// 4. Fetch Motivational & Mindset Movies (Categories: Motivational or Mindset)
+// 4. Fetch Motivational & Mindset Movies
 $mindsetStmt = $db->query("SELECT m.* FROM `movies` m 
                            JOIN `categories` c ON m.category_id = c.id 
                            WHERE m.status = 1 AND c.slug IN ('mindset', 'motivational') 
                            ORDER BY m.rating DESC LIMIT 6");
 $mindsetMovies = $mindsetStmt->fetchAll();
 
-// 5. Fetch Business, Forex & Wealth Movies (Categories: Business, Forex, Millionaire, Billionaire)
+// 5. Fetch Business, Forex & Wealth Movies
 $businessStmt = $db->query("SELECT m.* FROM `movies` m 
                             JOIN `categories` c ON m.category_id = c.id 
                             WHERE m.status = 1 AND c.slug IN ('business', 'forex', 'millionaire', 'billionaire') 
@@ -42,9 +43,9 @@ $categoriesStmt = $db->query("SELECT * FROM `categories` WHERE `status` = 1 ORDE
 $allCategories = $categoriesStmt->fetchAll();
 
 // Page SEO Meta
-$pageTitle = get_setting('meta_title_default', 'CinemaVault | Premium Movies, Billionaire Mindset & Cinema Hub');
-$pageDescription = get_setting('meta_description_default', 'Stream high-definition cinema, motivational billionaire stories, Wall Street dramas, and forex mastery on CinemaVault.');
-$pageCanonical = BASE_URL . '/index.php';
+$pageTitle = get_setting('meta_title_default', 'ApkaShow | Watch Premium Movies, Billionaire Mindset & Cinema Hub');
+$pageDescription = get_setting('meta_description_default', 'Stream high-definition cinema, motivational billionaire stories, Wall Street dramas, and forex mastery on ApkaShow.');
+$pageCanonical = canonical_url_for('/');
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -126,7 +127,7 @@ require_once __DIR__ . '/includes/header.php';
         <div class="section-header">
             <div>
                 <h2 class="section-title mb-1">Latest Movies</h2>
-                <small class="text-muted">Fresh additions to the CinemaVault archive</small>
+                <small class="text-muted">Fresh additions to the ApkaShow archive</small>
             </div>
             <a href="<?php echo BASE_URL; ?>/category.php?slug=all" class="text-secondary text-hover-light small fw-bold text-decoration-none">
                 View All <i class="bi bi-arrow-right ms-1"></i>
@@ -150,7 +151,7 @@ require_once __DIR__ . '/includes/header.php';
         <div class="section-header">
             <div>
                 <h2 class="section-title mb-1">Popular & Trending</h2>
-                <small class="text-muted">Most streamed and critically acclaimed masterworks</small>
+                <small class="text-muted">Most streamed and critically acclaimed masterworks on ApkaShow</small>
             </div>
             <a href="<?php echo BASE_URL; ?>/category.php?slug=action" class="text-secondary text-hover-light small fw-bold text-decoration-none">
                 See More <i class="bi bi-arrow-right ms-1"></i>

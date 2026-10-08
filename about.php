@@ -1,17 +1,18 @@
 <?php
 /**
- * CinemaVault - About Us Page
+ * ApkaShow - About Us Page
  * Content is fully managed from Admin Panel Settings
+ * Domain: apkashow.com
  */
 require_once __DIR__ . '/includes/functions.php';
 
 $heroTitle = get_setting('about_hero_title', 'The World’s Premier Cinematic Hub for Visionaries');
-$heroSubtitle = get_setting('about_hero_subtitle', 'Fueling ambition, financial mastery, and high-performance mindsets through elite storytelling and masterclass cinema.');
-$aboutContent = get_setting('about_content', '<p class="lead">Welcome to CinemaVault, an exclusive cinematic streaming platform.</p>');
+$heroSubtitle = get_setting('about_hero_subtitle', 'Fueling ambition, financial mastery, and high-performance mindsets through elite storytelling and masterclass cinema on ApkaShow.');
+$aboutContent = get_setting('about_content', '<p class="lead">Welcome to ApkaShow, an exclusive cinematic streaming platform.</p>');
 
-$pageTitle = 'About Us | CinemaVault Elite';
-$pageDescription = 'Learn more about CinemaVault, our vision, curated cinematic masterclasses, and motivational storytelling archive.';
-$pageCanonical = BASE_URL . '/about.php';
+$pageTitle = 'About Us | ApkaShow';
+$pageDescription = 'Learn more about ApkaShow, our vision, curated cinematic masterclasses, and motivational storytelling archive.';
+$pageCanonical = canonical_url_for('/about.php');
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -57,7 +58,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="p-4 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-25 mb-4">
                     <i class="bi bi-shield-check fs-1 text-danger mb-2 d-block"></i>
                     <h5 class="text-white fw-bold">Strict Compliance</h5>
-                    <p class="text-muted small mb-0">Every film hosted or embedded complies strictly with legal distribution, licensed trailers, and archival distribution standards.</p>
+                    <p class="text-muted small mb-0">Every film hosted or embedded complies strictly with legal distribution, licensed trailers, and archival distribution standards on ApkaShow.</p>
                 </div>
 
                 <div class="p-4 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-25">

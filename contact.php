@@ -1,7 +1,8 @@
 <?php
 /**
- * CinemaVault - Contact Us Page
+ * ApkaShow - Contact Us Page
  * Includes dynamic WhatsApp button, contact details from Admin Panel, and contact form
+ * Domain: apkashow.com
  */
 require_once __DIR__ . '/includes/functions.php';
 
@@ -26,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db = getDB();
                 $stmt = $db->prepare("INSERT INTO `contact_messages` (`name`, `email`, `subject`, `message`) VALUES (?, ?, ?, ?)");
                 $stmt->execute([$name, $email, $subject, $message]);
-                $successMsg = 'Thank you! Your message has been safely received. Our concierge team will respond shortly.';
+                $successMsg = 'Thank you! Your message has been safely received. The ApkaShow team will respond shortly.';
             } catch (Exception $e) {
                 $errorMsg = 'Failed to submit your message. Please contact us directly via WhatsApp.';
             }
@@ -35,13 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $whatsAppNumber = get_setting('whatsapp_number', '+1234567890');
-$contactEmail = get_setting('contact_email', 'contact@cinemavault.com');
-$contactPhone = get_setting('contact_phone', '+1 (800) 555-VAULT');
+$contactEmail = get_setting('contact_email', 'contact@apkashow.com');
+$contactPhone = get_setting('contact_phone', '+1 (800) 555-SHOW');
 $contactAddress = get_setting('contact_address', '100 Hollywood Blvd, Suite 880, Los Angeles, CA 90028');
 
-$pageTitle = 'Contact Us & WhatsApp Concierge | CinemaVault Elite';
-$pageDescription = 'Contact CinemaVault staff for content requests, partnership inquiries, or WhatsApp direct messaging.';
-$pageCanonical = BASE_URL . '/contact.php';
+$pageTitle = 'Contact Us & WhatsApp Concierge | ApkaShow';
+$pageDescription = 'Contact ApkaShow staff for content requests, partnership inquiries, or WhatsApp direct messaging.';
+$pageCanonical = canonical_url_for('/contact.php');
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -51,7 +52,7 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Contact Hero -->
     <div class="glass-card p-4 p-md-5 mb-5 text-center">
         <span class="badge bg-danger rounded-pill px-3 py-1 mb-3 text-uppercase letter-spacing-1">Direct Touchpoint</span>
-        <h1 class="display-6 fw-bold text-white mb-2">Connect with CinemaVault</h1>
+        <h1 class="display-6 fw-bold text-white mb-2">Connect with ApkaShow</h1>
         <p class="text-secondary mx-auto mb-0" style="max-width: 600px;">
             Have inquiries regarding content licensing, feature additions, or private film curation? Our support channels are accessible 24/7.
         </p>

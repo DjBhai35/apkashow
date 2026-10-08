@@ -1,8 +1,11 @@
-# CinemaVault Elite - Premium Cinematic Movie Platform
+# ApkaShow - Premium Cinematic Movie Platform
 
-An ultra-premium, production-ready dark cinematic movie website and media management hub built with **PHP (OOP/PDO) + MySQL + Bootstrap 5 + Vanilla JavaScript/CSS3**. Engineered specifically for standard shared hosting environments (**cPanel, Hostinger, Bluehost, Namecheap, XAMPP, Laragon, Apache/Nginx**) with zero Node.js server dependencies.
+An ultra-premium, production-ready dark cinematic movie website and media management hub built with **PHP (OOP/PDO) + MySQL + Bootstrap 5 + Vanilla JavaScript/CSS3**. Engineered specifically for standard shared hosting environments (**cPanel, Hostinger, Bluehost, Namecheap, Apache, LiteSpeed, XAMPP, Laragon**) with **zero Node.js or server runtime dependencies**.
 
-![CinemaVault Preview](assets/images/og-preview.jpg)
+* **Production Domain:** [https://apkashow.com](https://apkashow.com)
+* **Brand Name:** **ApkaShow**
+
+![ApkaShow Preview](assets/images/og-preview.jpg)
 
 ---
 
@@ -37,14 +40,14 @@ An ultra-premium, production-ready dark cinematic movie website and media manage
   * Business, Forex & Wealth Cinema
 
 ### 4. Movie System & 4K Detail Page
-* Dedicated SEO-friendly detail pages (`movie.php?slug=...` or clean rewrite `/movie/slug`).
+* Dedicated SEO-friendly clean detail pages (`/movie/slug` via `.htaccess`).
 * Responsive video player wrapper (16:9) supporting YouTube embeds, Vimeo, or direct MP4 streams.
 * Complete film metadata: IMDb rating, duration, release year, language, genre, full plot synopsis, and tag chips.
 * **Legal Streaming & Downloads:** Clean download links and legal distribution disclaimers.
 * Related movies grid based on matching category.
 
 ### 5. Multi-Field Search System
-* Database-powered search running against:
+* Real database-powered search running across:
   * Movie Title
   * Short & Full Descriptions
   * Category Name
@@ -62,10 +65,11 @@ A production-ready administrative control center with authentication and CSRF to
 * **Featured Banners Manager:** Add, sort, and edit hero slides for the homepage carousel.
 * **System & WhatsApp Settings:** Instant WhatsApp number updates, custom branding text, advertisement slots (header/footer code), About Us & Contact Us text editor, and default SEO tags.
 * **User Inquiries:** View and manage messages submitted via the Contact Us form.
-* **Staff Users:** Create administrator/editor accounts with secure password hashing (`password_hash` with Bcrypt).
+* **Staff Users & Secure Password Enforcement:** Create administrator/editor accounts with secure password hashing (`password_hash` with Bcrypt).
 
 ### 7. Technical SEO & Schema
-* Clean URLs via `.htaccess` rewrites.
+* Clean URLs via `.htaccess` rewrites (`/movie/slug` and `/category/slug`).
+* Canonical URL implementation pointing strictly to `https://apkashow.com`.
 * Automated **Schema.org Movie JSON-LD** structured data on every movie page.
 * Dynamic Open Graph (OG) & Twitter card tags for social sharing.
 * Auto-generated dynamic **XML Sitemap** (`/sitemap.xml` / `sitemap.xml.php`).
@@ -75,6 +79,7 @@ A production-ready administrative control center with authentication and CSRF to
 * PDO prepared statements throughout to prevent SQL Injection.
 * Output escaping via `e()` helper function to prevent Cross-Site Scripting (XSS).
 * Session security (`cookie_httponly`, session regeneration on login).
+* Forced password update protection for new administrator accounts.
 * CSRF token protection on all administrative and contact forms.
 * Secure image file upload validation (checking MIME-types via `finfo`).
 * Gzip compression directives and directory listing disabled in `.htaccess`.
@@ -82,8 +87,8 @@ A production-ready administrative control center with authentication and CSRF to
 ---
 
 ## 🛠️ Technology Stack
-* **Backend:** PHP 7.4 / 8.0 / 8.1 / 8.2 / 8.3 (Native PDO, no heavy frameworks)
-* **Database:** MySQL 5.7+ / MariaDB 10.3+
+* **Backend:** PHP 7.4 / 8.0 / 8.1 / 8.2 / 8.3 (Native PDO, no Node.js runtime required)
+* **Database:** MySQL 5.7+ / MySQL 8.0+ / MariaDB 10.3+
 * **Frontend:** Bootstrap 5.3.3, Bootstrap Icons 1.11.3, Vanilla CSS3 & Modern JavaScript (ES6)
 * **Hosting Compatibility:** Apache / LiteSpeed / Nginx / cPanel / Hostinger / XAMPP / Laragon
 
@@ -91,12 +96,12 @@ A production-ready administrative control center with authentication and CSRF to
 
 ## 🚀 Installation & Deployment Guide
 
-### Option A: Standard Deployment (cPanel / Hostinger / Shared Hosting)
+### Option A: Standard Deployment (Hostinger / cPanel / Shared Hosting)
 
 1. **Upload Files:**
-   * Compress or upload all project files into your hosting account's web root (usually `public_html`).
+   * Upload all project files into your hosting account's web root (`public_html`).
 2. **Create MySQL Database:**
-   * In cPanel, navigate to **MySQL Databases** and create a database (e.g. `u123456_cinemavault`).
+   * In cPanel or Hostinger hPanel, navigate to **MySQL Databases** and create a database (e.g. `u123456_apkashow`).
    * Create a database user, assign a password, and grant **ALL PRIVILEGES** to the user on that database.
 3. **Configure Database Credentials:**
    * Open `includes/config.php` (or copy `includes/config.example.php` to `includes/config.php`).
@@ -107,11 +112,11 @@ A production-ready administrative control center with authentication and CSRF to
      define('DB_USER', 'your_database_user');
      define('DB_PASS', 'your_database_password');
      ```
-4. **Import Database Schema:**
-   * Open **phpMyAdmin** in your hosting control panel.
-   * Select your database and click **Import**.
-   * Choose `database/schema.sql` from your files and click **Go**.
-   * *(Alternatively, you can visit `http://yourdomain.com/install.php` to run the 1-click installer wizard).*
+4. **Initialize Database & Master Admin:**
+   * Visit `https://apkashow.com/install.php` in your browser.
+   * Click **Initialize Database Schema & Seed Data** to import the curated movie collection.
+   * You will then be prompted to define your personal, secure master administrator credentials (username, email, and password min. 8 characters).
+   * For optimal security after setup, delete or restrict `install.php`.
 5. **Set Folder Permissions:**
    * Ensure `assets/uploads/` (and its subfolders `movies/` and `banners/`) have write permissions (`755` or `775`).
 
@@ -120,21 +125,11 @@ A production-ready administrative control center with authentication and CSRF to
 ### Option B: Local Testing (XAMPP / Laragon / WampServer)
 
 1. Move the project folder into your web directory:
-   * **XAMPP:** `C:\xampp\htdocs\movie-website\`
-   * **Laragon:** `C:\laragon\www\movie-website\`
-2. Open phpMyAdmin (`http://localhost/phpmyadmin`), create a database named `cinemavault_db`, and import `database/schema.sql`.
-3. Open your browser and navigate to:
-   * `http://localhost/movie-website/`
-
----
-
-## 🔐 Default Admin Credentials
-
-* **Admin Portal URL:** `http://yourdomain.com/admin/login.php`
-* **Username:** `admin`
-* **Password:** `admin123`
-
-> **Security Note:** Once logged in, immediately go to **Admin Accounts** (`/admin/users.php`) and change the default password.
+   * **XAMPP:** `C:\xampp\htdocs\apkashow\`
+   * **Laragon:** `C:\laragon\www\apkashow\`
+2. Open your browser and navigate to:
+   * `http://localhost/apkashow/install.php`
+3. Execute the setup wizard to create the database and set your admin password.
 
 ---
 
@@ -160,7 +155,7 @@ To configure the live WhatsApp button:
 ├── search.php                 # Real multi-field search engine
 ├── about.php                  # About us page (admin managed)
 ├── contact.php                # Contact form & WhatsApp concierge
-├── install.php                # One-click diagnostic setup assistant
+├── install.php                # Database setup assistant & secure admin provisioner
 ├── robots.txt                 # Search engine crawler directives
 ├── sitemap.xml.php            # Dynamic XML sitemap generator
 ├── database/
@@ -177,9 +172,7 @@ To configure the live WhatsApp button:
 │   └── movie_card.php         # Reusable movie card component
 ├── assets/
 │   ├── css/
-│   │   └── cinematic.css      # Custom neo-noir cinematic styling
-│   ├── js/
-│   │   └── main.js            # Carousel auto-sliding, live search & player scripts
+│   └── js/
 │   └── uploads/
 │       ├── movies/            # Movie posters uploaded via admin
 │       └── banners/           # Hero backdrop images uploaded via admin
@@ -195,13 +188,13 @@ To configure the live WhatsApp button:
     ├── banners.php            # Hero slider banner manager
     ├── settings.php           # Site branding, WhatsApp number & Ad settings
     ├── messages.php           # User inquiries manager
-    └── users.php              # Admin account creation & password management
+    └── users.php              # Admin account creation & forced password updates
 ```
 
 ---
 
 ## ⚖️ Legal Content Compliance
-CinemaVault is built for webmasters streaming authorized promotional trailers, public domain media, licensed video streams, or direct archival content. No deceptive pop-up scripts or forced redirect advertising loops are included.
+ApkaShow is built for webmasters streaming authorized promotional trailers, public domain media, licensed video streams, or direct archival content. No deceptive pop-up scripts or forced redirect advertising loops are included.
 
 ---
 

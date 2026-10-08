@@ -1,7 +1,8 @@
 <?php
 /**
- * CinemaVault - Admin System Settings
+ * ApkaShow - Admin System Settings
  * WhatsApp Number & Message, Site Branding, About & Contact Us content, Ad codes, SEO Defaults
+ * Domain: apkashow.com
  */
 require_once __DIR__ . '/../includes/functions.php';
 require_admin_auth();
@@ -46,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $settings = get_all_settings();
 
-$adminTitle = "System & WhatsApp Settings - CinemaVault";
+$adminTitle = "System & WhatsApp Settings - ApkaShow";
 $pageHeading = "Platform & WhatsApp Settings";
 
 require_once __DIR__ . '/header.php';
@@ -56,7 +57,7 @@ require_once __DIR__ . '/header.php';
     <?php echo csrf_field(); ?>
 
     <div class="row g-4">
-        <!-- Section 1: WhatsApp Configuration (Top Priority as requested) -->
+        <!-- Section 1: WhatsApp Configuration (Top Priority) -->
         <div class="col-lg-6">
             <div class="glass-card p-4 mb-4 border-success border-opacity-50">
                 <div class="d-flex align-items-center gap-2 mb-3 text-success">
@@ -78,7 +79,7 @@ require_once __DIR__ . '/header.php';
 
                 <div class="mb-0">
                     <label class="form-label text-light small fw-bold">Default Pre-filled WhatsApp Chat Message</label>
-                    <textarea name="whatsapp_message" class="form-control bg-dark border-secondary text-white" rows="2" placeholder="Hello CinemaVault!"><?php echo e($settings['whatsapp_message'] ?? 'Hello CinemaVault!'); ?></textarea>
+                    <textarea name="whatsapp_message" class="form-control bg-dark border-secondary text-white" rows="2" placeholder="Hello ApkaShow!"><?php echo e($settings['whatsapp_message'] ?? 'Hello ApkaShow!'); ?></textarea>
                 </div>
             </div>
 
@@ -88,18 +89,18 @@ require_once __DIR__ . '/header.php';
 
                 <div class="mb-3">
                     <label class="form-label text-light small fw-bold">Website Name</label>
-                    <input type="text" name="site_name" class="form-control bg-dark border-secondary text-white" value="<?php echo e($settings['site_name'] ?? 'CinemaVault Elite'); ?>" required>
+                    <input type="text" name="site_name" class="form-control bg-dark border-secondary text-white" value="<?php echo e($settings['site_name'] ?? 'ApkaShow'); ?>" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label text-light small fw-bold">Header HTML Logo Text</label>
-                    <input type="text" name="site_logo_text" class="form-control bg-dark border-secondary text-white" value="<?php echo e($settings['site_logo_text'] ?? 'CINEMA<span class="text-gradient">VAULT</span>'); ?>" required>
+                    <input type="text" name="site_logo_text" class="form-control bg-dark border-secondary text-white" value="<?php echo e($settings['site_logo_text'] ?? 'APKA<span class="text-gradient">SHOW</span>'); ?>" required>
                     <div class="form-text text-muted small">Supports HTML classes like <code>text-gradient</code> or <code>text-danger</code>.</div>
                 </div>
 
                 <div class="mb-0">
                     <label class="form-label text-light small fw-bold">Website Tagline</label>
-                    <input type="text" name="site_tagline" class="form-control bg-dark border-secondary text-white" value="<?php echo e($settings['site_tagline'] ?? ''); ?>">
+                    <input type="text" name="site_tagline" class="form-control bg-dark border-secondary text-white" value="<?php echo e($settings['site_tagline'] ?? 'Stream Premium Motivational, Billionaire & Cinematic Masterpieces'); ?>">
                 </div>
             </div>
 
@@ -129,12 +130,12 @@ require_once __DIR__ . '/header.php';
 
                 <div class="mb-3">
                     <label class="form-label text-light small fw-bold">Contact Email</label>
-                    <input type="email" name="contact_email" class="form-control bg-dark border-secondary text-white" value="<?php echo e($settings['contact_email'] ?? 'contact@cinemavault.com'); ?>">
+                    <input type="email" name="contact_email" class="form-control bg-dark border-secondary text-white" value="<?php echo e($settings['contact_email'] ?? 'contact@apkashow.com'); ?>">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label text-light small fw-bold">Contact Phone Number</label>
-                    <input type="text" name="contact_phone" class="form-control bg-dark border-secondary text-white" value="<?php echo e($settings['contact_phone'] ?? '+1 (800) 555-VAULT'); ?>">
+                    <input type="text" name="contact_phone" class="form-control bg-dark border-secondary text-white" value="<?php echo e($settings['contact_phone'] ?? '+1 (800) 555-SHOW'); ?>">
                 </div>
 
                 <div class="mb-0">

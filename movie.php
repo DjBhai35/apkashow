@@ -1,7 +1,8 @@
 <?php
 /**
- * CinemaVault - Movie Detail & Player Page
+ * ApkaShow - Movie Detail & Player Page
  * Features 4K poster, trailer embed, legal streaming player, download links, metadata, and related films
+ * Domain: apkashow.com
  */
 require_once __DIR__ . '/includes/functions.php';
 
@@ -22,9 +23,8 @@ $stmt->execute([$slug]);
 $movie = $stmt->fetch();
 
 if (!$movie) {
-    // If movie doesn't exist or is unpublished
     http_response_code(404);
-    $pageTitle = "Movie Not Found | CinemaVault";
+    $pageTitle = "Movie Not Found | ApkaShow";
     require_once __DIR__ . '/includes/header.php';
     ?>
     <div class="container py-5 text-center">
@@ -56,11 +56,11 @@ $relStmt->execute([$movie['category_id'], $movie['id']]);
 $relatedMovies = $relStmt->fetchAll();
 
 // Dynamic SEO Configurations
-$pageTitle = !empty($movie['meta_title']) ? $movie['meta_title'] : ($movie['title'] . ' (' . $movie['release_year'] . ') - Watch Online & Full Movie Info | CinemaVault');
+$pageTitle = !empty($movie['meta_title']) ? $movie['meta_title'] : ($movie['title'] . ' (' . $movie['release_year'] . ') - Watch Online & Full Movie Info | ApkaShow');
 $pageDescription = !empty($movie['meta_description']) ? $movie['meta_description'] : ($movie['short_description']);
-$pageKeywords = !empty($movie['meta_keywords']) ? $movie['meta_keywords'] : ($movie['tags'] . ', ' . $movie['genre'] . ', movie streaming');
+$pageKeywords = !empty($movie['meta_keywords']) ? $movie['meta_keywords'] : ($movie['tags'] . ', ' . $movie['genre'] . ', movie streaming, apkashow');
 $pageImage = resolve_image_url($movie['poster']);
-$pageCanonical = !empty($movie['canonical_url']) ? $movie['canonical_url'] : (BASE_URL . '/movie.php?slug=' . urlencode($movie['slug']));
+$pageCanonical = !empty($movie['canonical_url']) ? $movie['canonical_url'] : canonical_url_for('/movie/' . urlencode($movie['slug']));
 $isMovieDetail = true;
 
 require_once __DIR__ . '/includes/header.php';
@@ -201,7 +201,7 @@ if (!empty($movie['trailer_url'])) {
         <div class="alert alert-dark border-secondary border-opacity-50 small text-secondary mt-3 mb-0 d-flex align-items-center">
             <i class="bi bi-shield-check text-success fs-4 me-3"></i>
             <div>
-                <strong>Legal Content Guarantee:</strong> CinemaVault features and embeds content only under fair-use commentary, public domain archives, licensed embeds, and promotional distributors. No deceptive pop-ups or unauthorized media.
+                <strong>Legal Content Guarantee:</strong> ApkaShow features and embeds content only under fair-use commentary, public domain archives, licensed embeds, and promotional distributors. No deceptive pop-ups or unauthorized media.
             </div>
         </div>
     </div>

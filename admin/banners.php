@@ -1,6 +1,6 @@
 <?php
 /**
- * CinemaVault - Admin Featured Banners Manager
+ * ApkaShow - Admin Featured Banners Manager
  * Add, edit, delete, reorder hero carousel slides
  */
 require_once __DIR__ . '/../includes/functions.php';
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $bannersStmt = $db->query("SELECT b.*, m.title as movie_title FROM `featured_banners` b LEFT JOIN `movies` m ON b.movie_id = m.id ORDER BY b.sort_order ASC, b.id DESC");
 $banners = $bannersStmt->fetchAll();
 
-$adminTitle = "Hero Banners Manager - CinemaVault Studio";
+$adminTitle = "Hero Banners Manager - ApkaShow Studio";
 $pageHeading = "Featured Hero Banner Carousel";
 
 require_once __DIR__ . '/header.php';

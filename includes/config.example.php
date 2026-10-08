@@ -1,8 +1,9 @@
 <?php
 /**
- * CinemaVault - Application Configuration Template
- * Copy this file to `config.php` and update your MySQL database credentials.
- * Compatible with Apache/cPanel/Hostinger/XAMPP/Laragon.
+ * ApkaShow - Application Configuration Template
+ * Copy this file to `config.php` and set your MySQL database credentials.
+ * Production Domain: apkashow.com
+ * Compatible with Apache/cPanel/Hostinger/LiteSpeed/XAMPP/Laragon.
  */
 
 // Define Application Environment ('development' or 'production')
@@ -15,38 +16,38 @@ if (ENVIRONMENT === 'production') {
 } else {
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
+    error_reporting(E_ALL & ~E_NOTICE);
 }
 
 // Session Security Configuration
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_only_cookies', 1);
-    // Enable cookie_secure if running on HTTPS
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
         ini_set('session.cookie_secure', 1);
     }
     session_start();
 }
 
-// Base URL Auto-detection
+// Production Canonical Domain and Base URL Auto-detection
+$productionDomain = 'https://apkashow.com';
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)) ? "https://" : "http://";
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$host = $_SERVER['HTTP_HOST'] ?? 'apkashow.com';
 $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-$basePath = rtrim($scriptDir, '/admin');
-$basePath = rtrim($basePath, '/api');
+$basePath = preg_replace('#/(admin|api|includes)$#', '', $scriptDir);
 $basePath = rtrim($basePath, '/');
 
-defined('BASE_URL') || define('BASE_URL', $protocol . $host . $basePath);
+defined('CANONICAL_DOMAIN') || define('CANONICAL_DOMAIN', $productionDomain);
+defined('BASE_URL') || define('BASE_URL', ($host === 'apkashow.com' || $host === 'www.apkashow.com') ? $productionDomain : ($protocol . $host . $basePath));
 defined('SITE_ROOT') || define('SITE_ROOT', realpath(__DIR__ . '/..'));
 
-// Database Credentials
-define('DB_HOST', 'localhost');
-define('DB_PORT', '3306');
-define('DB_NAME', 'cinemavault_db');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+// Database Credentials (Set via environment variables or define here)
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_PORT', getenv('DB_PORT') ?: '3306');
+define('DB_NAME', getenv('DB_NAME') ?: 'apkashow_db');
+define('DB_USER', getenv('DB_USER') ?: 'apkashow_user');
+define('DB_PASS', getenv('DB_PASS') ?: '');
 define('DB_CHARSET', 'utf8mb4');
 
-// Default Admin Session Key
-define('ADMIN_SESSION_KEY', 'cinemavault_admin_user');
+// Admin Session Identifier
+define('ADMIN_SESSION_KEY', 'apkashow_admin_session');

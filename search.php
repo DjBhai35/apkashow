@@ -1,7 +1,8 @@
 <?php
 /**
- * CinemaVault - Search System
+ * ApkaShow - Search System
  * Real database-powered search across title, description, category, genre, tags, and language
+ * Domain: apkashow.com
  */
 require_once __DIR__ . '/includes/functions.php';
 
@@ -41,9 +42,9 @@ if (!empty($q)) {
     $movies = $searchStmt->fetchAll();
 }
 
-$pageTitle = !empty($q) ? 'Search results for "' . $q . '" | CinemaVault' : 'Search Movies | CinemaVault Elite';
-$pageDescription = 'Search CinemaVault database for top movies, genres, mindsets, and billionaire biographies.';
-$pageCanonical = BASE_URL . '/search.php?q=' . urlencode($q);
+$pageTitle = !empty($q) ? 'Search results for "' . $q . '" | ApkaShow' : 'Search Movies | ApkaShow';
+$pageDescription = 'Search ApkaShow database for top movies, genres, mindsets, and billionaire biographies.';
+$pageCanonical = canonical_url_for('/search.php?q=' . urlencode($q));
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -52,7 +53,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <!-- Search Hero & Input Box -->
     <div class="glass-card p-4 p-md-5 mb-5 text-center">
-        <h1 class="display-6 fw-bold text-white mb-2">Search CinemaVault</h1>
+        <h1 class="display-6 fw-bold text-white mb-2">Search ApkaShow</h1>
         <p class="text-secondary mb-4">Discover motivational stories, forex documentaries, blockbuster action, and billionaire cinema.</p>
         
         <form action="<?php echo BASE_URL; ?>/search.php" method="GET" class="mx-auto" style="max-width: 650px;">
