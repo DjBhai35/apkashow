@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Prevent indexing admin panel and private directories
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /database/
+
+Sitemap: /sitemap.xml
