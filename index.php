@@ -168,11 +168,11 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </section>
 
-    <!-- Section 3: Motivational & Mindset Masterpieces -->
+    <!-- Section 3: Motivational & Mindset Movies -->
     <section class="mb-5">
         <div class="section-header">
             <div>
-                <h2 class="section-title mb-1">Motivational & Mindset</h2>
+                <h2 class="section-title mb-1">Motivational & Mindset Movies</h2>
                 <small class="text-muted">High-performance psychology, stoicism, and relentless drive</small>
             </div>
             <a href="<?php echo BASE_URL; ?>/category.php?slug=mindset" class="text-secondary text-hover-light small fw-bold text-decoration-none">
@@ -190,11 +190,11 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </section>
 
-    <!-- Section 4: Business, Forex & Billionaire Empire -->
+    <!-- Section 4: Business, Forex & Billionaire Empire Movies -->
     <section class="mb-5">
         <div class="section-header">
             <div>
-                <h2 class="section-title mb-1">Business, Forex & Wealth Cinema</h2>
+                <h2 class="section-title mb-1">Business, Forex & Wealth Movies</h2>
                 <small class="text-muted">Boardroom strategies, financial empires, and currency titans</small>
             </div>
             <a href="<?php echo BASE_URL; ?>/category.php?slug=business" class="text-secondary text-hover-light small fw-bold text-decoration-none">

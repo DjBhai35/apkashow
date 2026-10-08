@@ -73,12 +73,7 @@ $canonicalUrl = $pageCanonical ?? canonical_url_for(ltrim($_SERVER['REQUEST_URI'
 </head>
 <body class="d-flex flex-column min-vh-100">
 
-<!-- Header Ad Slot (Configurable from Admin) -->
-<?php if (!empty($headerAd)): ?>
-    <div class="container mt-2">
-        <?php echo $headerAd; ?>
-    </div>
-<?php endif; ?>
+
 
 <!-- Top Cinematic Navbar -->
 <nav class="navbar navbar-expand-xl glass-nav sticky-top py-2">
@@ -103,30 +98,37 @@ $canonicalUrl = $pageCanonical ?? canonical_url_for(ltrim($_SERVER['REQUEST_URI'
                     </a>
                 </li>
                 
-                <!-- Mandatory High-Priority Category Links Requested by User -->
+                <!-- Mandatory High-Priority Category Links (Dynamic from database or admin edits) -->
+                <?php
+                // Map active categories by slug for instant dynamic naming
+                $catsBySlug = [];
+                foreach ($navCategories as $nc) {
+                    $catsBySlug[$nc['slug']] = $nc;
+                }
+                ?>
                 <li class="nav-item">
                     <a class="nav-link <?php echo ($currentSlug === 'millionaire') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/category.php?slug=millionaire">
-                        <i class="bi bi-currency-dollar me-1 text-warning"></i> Millionaire
+                        <i class="bi bi-currency-dollar me-1 text-warning"></i> <?php echo e($catsBySlug['millionaire']['name'] ?? 'Millionaire Movies'); ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo ($currentSlug === 'billionaire') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/category.php?slug=billionaire">
-                        <i class="bi bi-gem me-1 text-info"></i> Billionaire
+                        <i class="bi bi-gem me-1 text-info"></i> <?php echo e($catsBySlug['billionaire']['name'] ?? 'Billionaire Movies'); ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo ($currentSlug === 'mindset') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/category.php?slug=mindset">
-                        <i class="bi bi-lightning-charge me-1 text-warning"></i> Mindset
+                        <i class="bi bi-lightning-charge me-1 text-warning"></i> <?php echo e($catsBySlug['mindset']['name'] ?? 'Mindset Movies'); ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo ($currentSlug === 'business') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/category.php?slug=business">
-                        <i class="bi bi-briefcase me-1 text-light"></i> Business
+                        <i class="bi bi-briefcase me-1 text-light"></i> <?php echo e($catsBySlug['business']['name'] ?? 'Business Movies'); ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo ($currentSlug === 'forex') ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/category.php?slug=forex">
-                        <i class="bi bi-graph-up-arrow me-1 text-success"></i> Forex
+                        <i class="bi bi-graph-up-arrow me-1 text-success"></i> <?php echo e($catsBySlug['forex']['name'] ?? 'Forex Movies'); ?>
                     </a>
                 </li>
 

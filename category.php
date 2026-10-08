@@ -49,15 +49,17 @@ $movies = $movieStmt->fetchAll();
 
 // Dynamic SEO Setup
 if ($category) {
-    $pageTitle = !empty($category['meta_title']) ? $category['meta_title'] : ($category['name'] . ' Movies | Watch Online HD | ApkaShow');
-    $pageDescription = !empty($category['meta_description']) ? $category['meta_description'] : ('Explore the best ' . $category['name'] . ' movies, complete cast info, synopsis, and legal streaming links on ApkaShow.');
     $catName = $category['name'];
+    $catDisplayTitle = (stripos($catName, 'Movies') !== false || stripos($catName, 'Films') !== false || stripos($catName, 'Cinema') !== false) ? $catName : ($catName . ' Movies');
+    $pageTitle = !empty($category['meta_title']) ? $category['meta_title'] : ($catDisplayTitle . ' | Watch Online HD | ApkaShow');
+    $pageDescription = !empty($category['meta_description']) ? $category['meta_description'] : ('Explore the best ' . $catDisplayTitle . ', complete cast info, synopsis, and legal streaming links on ApkaShow.');
     $catDesc = $category['description'];
     $catIcon = $category['icon'] ?: 'bi-film';
 } else {
     $pageTitle = 'All Movies Archive | ApkaShow';
     $pageDescription = 'Browse the complete cinematic library of motivational, billionaire, action, thriller, and drama films on ApkaShow.';
     $catName = 'All Movies';
+    $catDisplayTitle = 'All Movies';
     $catDesc = 'Browse the entire ApkaShow collection across all genres and languages.';
     $catIcon = 'bi-collection-play';
 }
@@ -85,7 +87,7 @@ require_once __DIR__ . '/includes/header.php';
                     <i class="bi <?php echo e($catIcon); ?>"></i>
                 </div>
                 <div>
-                    <h1 class="display-6 fw-bold text-white mb-1"><?php echo e($catName); ?> Movies</h1>
+                    <h1 class="display-6 fw-bold text-white mb-1"><?php echo e($catDisplayTitle); ?></h1>
                     <?php if (!empty($catDesc)): ?>
                         <p class="text-muted mb-0 lead fs-6"><?php echo e($catDesc); ?></p>
                     <?php endif; ?>

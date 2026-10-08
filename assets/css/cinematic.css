@@ -629,10 +629,10 @@ h1, h2, h3, h4, h5, h6, .brand-font {
   border: none;
 }
 
-/* Footer Styling */
+/* Footer Styling with High-Contrast Readability */
 .footer-cinematic {
-  background: #040609;
-  border-top: 1px solid var(--cv-border-subtle);
+  background: #06090e;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   padding-top: 4.5rem;
   padding-bottom: 2.5rem;
   position: relative;
@@ -642,24 +642,86 @@ h1, h2, h3, h4, h5, h6, .brand-font {
   content: '';
   position: absolute;
   top: 0;
-  left: 20%;
-  right: 20%;
+  left: 15%;
+  right: 15%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(229, 9, 20, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(229, 9, 20, 0.6), transparent);
+}
+
+.footer-heading {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.footer-text-muted {
+  color: #d1d5db !important; /* High-contrast light gray */
+  font-size: 0.92rem;
+  line-height: 1.6;
 }
 
 .footer-link {
-  color: var(--cv-text-muted);
+  color: #cbd5e1; /* Clear readable slate */
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.93rem;
+  font-weight: 500;
   transition: var(--cv-transition-smooth);
   display: inline-block;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.65rem;
 }
 
 .footer-link:hover {
-  color: #fff;
+  color: #ffffff;
   transform: translateX(4px);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.footer-contact-link {
+  color: #f3f4f6;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: var(--cv-transition-smooth);
+}
+
+.footer-contact-link:hover {
+  color: #38bdf8;
+  text-decoration: underline;
+}
+
+.footer-action-btn {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #f3f4f6 !important;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: var(--cv-transition-smooth);
+}
+
+.footer-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.footer-divider {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.footer-bottom-text {
+  color: #cbd5e1 !important;
+  font-size: 0.88rem;
+}
+
+.footer-sublink {
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: var(--cv-transition-smooth);
+}
+
+.footer-sublink:hover {
+  color: #ffffff;
+  text-decoration: underline;
 }
 
 /* Admin Dashboard Elements */
