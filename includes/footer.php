@@ -11,8 +11,15 @@ $siteLogoText = get_setting('site_logo_text', 'APKA<span class="text-gradient">S
 ?>
 </main> <!-- /main -->
 
-<!-- Footer Ad Slot (Admin Managed) -->
-<?php if (!empty($footerAd)): ?>
+<!-- Configurable Ad Slot Above Footer -->
+<?php 
+$footerAboveAd = render_ad_placement('footer_above');
+if (!empty($footerAboveAd)): 
+?>
+    <div class="container my-4">
+        <?php echo $footerAboveAd; ?>
+    </div>
+<?php elseif (!empty($footerAd)): ?>
     <div class="container my-4">
         <?php echo $footerAd; ?>
     </div>

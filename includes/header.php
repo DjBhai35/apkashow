@@ -37,25 +37,35 @@ $canonicalUrl = $pageCanonical ?? canonical_url_for(ltrim($_SERVER['REQUEST_URI'
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo e($metaTitle); ?></title>
     
-    <!-- Technical SEO Metadata -->
+    <!-- Preconnect & DNS-Prefetch for Core Web Vitals & Performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+
+    <!-- Technical SEO Metadata (Google Search Best Practices) -->
     <meta name="description" content="<?php echo e($metaDescription); ?>">
     <meta name="keywords" content="<?php echo e($metaKeywords); ?>">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="<?php echo e($robotsDirectives ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'); ?>">
     <link rel="canonical" href="<?php echo e($canonicalUrl); ?>">
     
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:locale" content="en_US">
     <meta property="og:type" content="<?php echo isset($isMovieDetail) ? 'video.movie' : 'website'; ?>">
     <meta property="og:title" content="<?php echo e($metaTitle); ?>">
     <meta property="og:description" content="<?php echo e($metaDescription); ?>">
     <meta property="og:url" content="<?php echo e($canonicalUrl); ?>">
     <meta property="og:image" content="<?php echo e($metaImage); ?>">
+    <meta property="og:image:alt" content="<?php echo e($metaTitle); ?>">
     <meta property="og:site_name" content="<?php echo e($siteName); ?>">
 
-    <!-- Twitter Card -->
+    <!-- Twitter / X Card -->
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@apkashow">
     <meta name="twitter:title" content="<?php echo e($metaTitle); ?>">
     <meta name="twitter:description" content="<?php echo e($metaDescription); ?>">
     <meta name="twitter:image" content="<?php echo e($metaImage); ?>">
+    <meta name="twitter:image:alt" content="<?php echo e($metaTitle); ?>">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
@@ -70,6 +80,31 @@ $canonicalUrl = $pageCanonical ?? canonical_url_for(ltrim($_SERVER['REQUEST_URI'
     <script>
         window.BASE_URL = "<?php echo BASE_URL; ?>";
     </script>
+
+    <?php if ($currentPage === 'index.php' && empty($currentSlug)): ?>
+    <!-- Schema.org WebSite Structured Data with Sitelinks Searchbox -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": <?php echo json_encode($siteName); ?>,
+      "url": <?php echo json_encode(CANONICAL_DOMAIN); ?>,
+      "description": <?php echo json_encode($metaDescription); ?>,
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": <?php echo json_encode(CANONICAL_DOMAIN . '/search.php?q={search_term_string}'); ?>
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <?php endif; ?>
+
+    <?php if (!empty($pageJsonLd)): ?>
+        <?php echo $pageJsonLd; ?>
+    <?php endif; ?>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
@@ -188,3 +223,14 @@ $canonicalUrl = $pageCanonical ?? canonical_url_for(ltrim($_SERVER['REQUEST_URI'
 
 <!-- Main Page Container Starts -->
 <main class="flex-grow-1">
+
+<?php
+// Render configurable header/search ad slot if enabled
+$headerAdHtml = render_ad_placement('header_search');
+if (!empty($headerAdHtml)):
+?>
+    <div class="container mt-2">
+        <?php echo $headerAdHtml; ?>
+    </div>
+<?php endif; ?>
+

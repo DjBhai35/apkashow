@@ -26,37 +26,130 @@ if (!empty($q)) {
         exit();
     }
 
-    $searchTerm = '%' . $q . '%';
-    
+    // Split search query into multi-word tokens for broad semantic discovery
+    $rawWords = preg_split('/\s+/', $q);
+    $words = [];
+    foreach ($rawWords as $w) {
+        $w = trim($w);
+        if (mb_strlen($w) >= 2) {
+            $words[] = $w;
+        }
+    }
+    if (empty($words)) {
+        $words = [$q];
+    }
+
+    // Build multi-field tokenized query across title, descriptions, genre, tags, language, year, keywords, and category
+    $whereParts = [];
+    $params = [];
+    foreach ($words as $word) {
+        $wTerm = '%' . $word . '%';
+        $whereParts[] = "(m.title LIKE ? OR m.short_description LIKE ? OR m.description LIKE ? OR m.genre LIKE ? OR m.tags LIKE ? OR m.language LIKE ? OR m.release_year LIKE ? OR m.meta_keywords LIKE ? OR c.name LIKE ?)";
+        for ($k = 0; $k < 9; $k++) {
+            $params[] = $wTerm;
+        }
+    }
+    $whereSql = implode(' AND ', $whereParts);
+
     // Count Matching Rows
     $countSql = "SELECT COUNT(*) FROM `movies` m 
                  LEFT JOIN `categories` c ON m.category_id = c.id 
-                 WHERE m.status = 1 
-                 AND (m.title LIKE ? OR m.short_description LIKE ? OR m.description LIKE ? OR m.genre LIKE ? OR m.tags LIKE ? OR m.language LIKE ? OR c.name LIKE ?)";
+                 WHERE m.status = 1 AND ($whereSql)";
     $countStmt = $db->prepare($countSql);
-    $countStmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+    $countStmt->execute($params);
     $totalMovies = (int)$countStmt->fetchColumn();
-    $totalPages = ceil($totalMovies / $perPage);
+    $totalPages = (int)ceil($totalMovies / $perPage);
 
-    // Fetch Matching Movies with Pagination
+    // Fetch Matching Movies with Relevance Ordering & Pagination
+    $fullTerm = '%' . $q . '%';
+    $titleStartsTerm = $q . '%';
     $searchSql = "SELECT m.*, c.name as category_name, c.slug as category_slug 
                   FROM `movies` m 
                   LEFT JOIN `categories` c ON m.category_id = c.id 
-                  WHERE m.status = 1 
-                  AND (m.title LIKE ? OR m.short_description LIKE ? OR m.description LIKE ? OR m.genre LIKE ? OR m.tags LIKE ? OR m.language LIKE ? OR c.name LIKE ?)
-                  ORDER BY (CASE WHEN m.title LIKE ? THEN 1 ELSE 2 END), m.id DESC 
+                  WHERE m.status = 1 AND ($whereSql) 
+                  ORDER BY 
+                    (CASE 
+                        WHEN LOWER(m.title) = LOWER(?) THEN 1 
+                        WHEN m.title LIKE ? THEN 2 
+                        WHEN m.title LIKE ? THEN 3 
+                        ELSE 4 
+                     END), 
+                    m.views_count DESC, 
+                    m.id DESC 
                   LIMIT $perPage OFFSET $offset";
     $searchStmt = $db->prepare($searchSql);
-    $searchStmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+    $allParams = array_merge($params, [$q, $titleStartsTerm, $fullTerm]);
+    $searchStmt->execute($allParams);
     $movies = $searchStmt->fetchAll();
 }
 
-$pageTitle = !empty($q) ? 'Search results for "' . $q . '" | ApkaShow' : 'Search Movies | ApkaShow';
-$pageDescription = 'Search ApkaShow database for top movies, genres, mindsets, and billionaire biographies.';
+$pageTitle = !empty($q) ? 'Search: "' . $q . '" - Full Movies & Trailers | ApkaShow' : 'Search Movies & Trailers | ApkaShow';
+$pageDescription = !empty($q) ? 'Search results for "' . $q . '" on ApkaShow. Stream HD movies, mindsets, forex masterclasses, and billionaire films.' : 'Search the ApkaShow database for top movies, genres, mindsets, and billionaire biographies.';
 $pageCanonical = canonical_url_for('/search.php?q=' . urlencode($q));
 
 require_once __DIR__ . '/includes/header.php';
 ?>
+
+<!-- Schema.org SearchResultsPage & BreadcrumbList Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "<?php echo BASE_URL; ?>/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Search",
+          "item": "<?php echo BASE_URL; ?>/search.php"
+        }
+        <?php if (!empty($q)): ?>,
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": <?php echo json_encode('Results for "' . $q . '"'); ?>,
+          "item": <?php echo json_encode($pageCanonical); ?>
+        }
+        <?php endif; ?>
+      ]
+    },
+    {
+      "@type": "SearchResultsPage",
+      "name": <?php echo json_encode($pageTitle); ?>,
+      "description": <?php echo json_encode($pageDescription); ?>,
+      "url": <?php echo json_encode($pageCanonical); ?>,
+      "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": <?php echo (int)$totalMovies; ?>,
+        "itemListElement": [
+          <?php 
+          $itemList = [];
+          if (!empty($movies)) {
+              foreach (array_slice($movies, 0, 10) as $idx => $mRow) {
+                  $itemList[] = json_encode([
+                      '@type' => 'Movie',
+                      'position' => $idx + 1,
+                      'name' => $mRow['title'],
+                      'url' => BASE_URL . '/movie.php?slug=' . urlencode($mRow['slug']),
+                      'image' => resolve_image_url($mRow['poster'])
+                  ], JSON_UNESCAPED_SLASHES);
+              }
+          }
+          echo implode(',', $itemList);
+          ?>
+        ]
+      }
+    }
+  ]
+}
+</script>
 
 <div class="container py-4">
 

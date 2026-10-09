@@ -57,6 +57,9 @@ $adminCurrentPage = basename($_SERVER['PHP_SELF'] ?? '');
             <a href="<?php echo BASE_URL; ?>/admin/banners.php" class="admin-link <?php echo ($adminCurrentPage === 'banners.php') ? 'active' : ''; ?>">
                 <i class="bi bi-images text-primary"></i> Featured Banners
             </a>
+            <a href="<?php echo BASE_URL; ?>/admin/ads.php" class="admin-link <?php echo ($adminCurrentPage === 'ads.php') ? 'active' : ''; ?>">
+                <i class="bi bi-badge-ad text-danger"></i> Ad Placements & AdSense
+            </a>
             <a href="<?php echo BASE_URL; ?>/admin/settings.php" class="admin-link <?php echo ($adminCurrentPage === 'settings.php') ? 'active' : ''; ?>">
                 <i class="bi bi-sliders text-success"></i> Site & WhatsApp Settings
             </a>

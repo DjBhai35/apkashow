@@ -367,6 +367,124 @@ function canonical_url_for($path) {
 }
 
 /**
+ * Convert human runtime (e.g. '180 min', '125m', '2h 15m') to ISO 8601 duration (e.g. 'PT180M')
+ */
+function iso8601_duration($str) {
+    if (empty($str)) {
+        return 'PT120M';
+    }
+    // Check if integer minutes
+    if (preg_match('/(\d+)\s*(?:min|m)/i', $str, $matches)) {
+        return 'PT' . (int)$matches[1] . 'M';
+    }
+    // Check if hours and minutes
+    if (preg_match('/(\d+)\s*h(?:our)?s?\s*(\d+)?\s*m?/i', $str, $matches)) {
+        $hours = (int)$matches[1];
+        $mins = isset($matches[2]) ? (int)$matches[2] : 0;
+        return 'PT' . $hours . 'H' . ($mins > 0 ? $mins . 'M' : '');
+    }
+    return 'PT120M';
+}
+
+/**
+ * Fetch ad configuration for a given placement
+ */
+function get_ad_placement($placement) {
+    static $adsCache = null;
+    if ($adsCache === null) {
+        $adsCache = [];
+        try {
+            $db = getDB();
+            $stmt = $db->query("SELECT * FROM `advertisements`");
+            while ($row = $stmt->fetch()) {
+                $adsCache[$row['placement']] = $row;
+            }
+        } catch (Exception $e) {
+            $adsCache = [];
+        }
+    }
+    return $adsCache[$placement] ?? null;
+}
+
+/**
+ * Render Ad Placement (Google AdSense or Custom Sponsored Showcase)
+ * Policy compliant: clearly labeled, non-deceptive, responsive, no forced clicks
+ */
+function render_ad_placement($placement, $extraClass = '') {
+    $ad = get_ad_placement($placement);
+    if (!$ad || empty($ad['status']) || $ad['ad_type'] === 'disabled') {
+        return '';
+    }
+
+    $output = '';
+
+    // Official Google AdSense Code Placement
+    if ($ad['ad_type'] === 'adsense' && !empty($ad['adsense_code'])) {
+        $output .= '<div class="ad-placement-zone ' . e($extraClass) . ' my-4 text-center" data-placement="' . e($placement) . '">';
+        $output .= '  <div class="ad-policy-label small text-uppercase letter-spacing-1 text-muted mb-1" style="font-size: 0.7rem;">Advertisement</div>';
+        $output .= '  <div class="ad-content-wrapper mx-auto overflow-hidden" style="min-height: 90px;">';
+        $output .= $ad['adsense_code']; // Output raw official Google AdSense code without alteration
+        $output .= '  </div>';
+        $output .= '</div>';
+        return $output;
+    }
+
+    // Custom Verified Promotional Ad Placement
+    if ($ad['ad_type'] === 'custom') {
+        $heading = !empty($ad['custom_heading']) ? $ad['custom_heading'] : $ad['title'];
+        $subheading = $ad['custom_subheading'] ?? '';
+        $btnText = !empty($ad['custom_button_text']) ? $ad['custom_button_text'] : 'Learn More';
+        $targetUrl = !empty($ad['custom_url']) ? $ad['custom_url'] : (!empty($ad['custom_whatsapp']) ? 'https://api.whatsapp.com/send?phone=' . preg_replace('/[^0-9]/', '', $ad['custom_whatsapp']) : '#');
+        $imgUrl = !empty($ad['custom_image']) ? resolve_image_url($ad['custom_image']) : '';
+
+        $output .= '<div class="ad-placement-zone ' . e($extraClass) . ' my-4" data-placement="' . e($placement) . '">';
+        $output .= '  <div class="d-flex align-items-center justify-content-between mb-1 px-1">';
+        $output .= '    <span class="ad-policy-label text-uppercase text-secondary" style="font-size: 0.68rem; letter-spacing: 0.08em;"><i class="bi bi-info-circle me-1"></i>Sponsored Showcase</span>';
+        $output .= '    <span class="badge bg-secondary bg-opacity-25 text-secondary" style="font-size: 0.65rem;">Partner</span>';
+        $output .= '  </div>';
+        $output .= '  <div class="glass-card p-3 p-md-4 border border-secondary border-opacity-50 position-relative overflow-hidden">';
+        $output .= '    <div class="row align-items-center g-3">';
+        
+        if (!empty($imgUrl)) {
+            $output .= '      <div class="col-md-auto text-center">';
+            $output .= '        <a href="' . e($targetUrl) . '" target="_blank" rel="sponsored noopener noreferrer" class="d-inline-block">';
+            $output .= '          <img src="' . e($imgUrl) . '" alt="' . e($heading) . ' Sponsor" class="rounded-3 shadow-sm" style="max-height: 85px; max-width: 160px; object-fit: contain;" loading="lazy">';
+            $output .= '        </a>';
+            $output .= '      </div>';
+        }
+
+        $output .= '      <div class="col-md">';
+        $output .= '        <h6 class="text-white fw-bold mb-1 fs-6">' . e($heading) . '</h6>';
+        if (!empty($subheading)) {
+            $output .= '        <p class="text-light text-opacity-75 small mb-0">' . e($subheading) . '</p>';
+        }
+        $output .= '      </div>';
+
+        $output .= '      <div class="col-md-auto text-md-end d-flex gap-2 justify-content-end">';
+        if (!empty($ad['custom_whatsapp'])) {
+            $waUrl = 'https://api.whatsapp.com/send?phone=' . preg_replace('/[^0-9]/', '', $ad['custom_whatsapp']) . '&text=' . urlencode('Hello, I am inquiring about ' . $heading);
+            $output .= '        <a href="' . e($waUrl) . '" target="_blank" rel="sponsored noopener noreferrer" class="btn btn-outline-success btn-sm px-3">';
+            $output .= '          <i class="bi bi-whatsapp me-1"></i> WhatsApp';
+            $output .= '        </a>';
+        }
+        if (!empty($targetUrl) && $targetUrl !== '#') {
+            $output .= '        <a href="' . e($targetUrl) . '" target="_blank" rel="sponsored noopener noreferrer" class="btn btn-outline-light btn-sm px-3">';
+            $output .= '          ' . e($btnText) . ' <i class="bi bi-box-arrow-up-right ms-1 small"></i>';
+            $output .= '        </a>';
+        }
+        $output .= '      </div>';
+
+        $output .= '    </div>';
+        $output .= '  </div>';
+        $output .= '</div>';
+
+        return $output;
+    }
+
+    return '';
+}
+
+/**
  * Automatically ensure new columns and tables exist without breaking existing databases
  */
 function ensure_schema_updates() {
@@ -393,6 +511,42 @@ function ensure_schema_updates() {
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX `idx_movie_id` (`movie_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+        // Ensure advertisements table exists
+        $db->exec("CREATE TABLE IF NOT EXISTS `advertisements` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `placement` VARCHAR(50) NOT NULL UNIQUE,
+            `title` VARCHAR(150) NOT NULL,
+            `ad_type` ENUM('disabled', 'custom', 'adsense') NOT NULL DEFAULT 'disabled',
+            `custom_heading` VARCHAR(150) NULL,
+            `custom_subheading` VARCHAR(255) NULL,
+            `custom_image` VARCHAR(255) NULL,
+            `custom_url` VARCHAR(255) NULL,
+            `custom_button_text` VARCHAR(50) DEFAULT 'Learn More',
+            `custom_whatsapp` VARCHAR(50) NULL,
+            `adsense_code` TEXT NULL,
+            `status` TINYINT(1) NOT NULL DEFAULT 0,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX `idx_placement` (`placement`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+        // Seed default placement records if table is empty
+        $adCount = (int)$db->query("SELECT COUNT(*) FROM `advertisements`")->fetchColumn();
+        if ($adCount === 0) {
+            $insAd = $db->prepare("INSERT INTO `advertisements` (`placement`, `title`, `ad_type`, `status`) VALUES (?, ?, 'disabled', 0)");
+            $defaultPlacements = [
+                'header_search'   => 'Header / Below Search Placement',
+                'below_hero'      => 'Below Hero Section Placement',
+                'between_content' => 'Between Movie Sections Placement',
+                'before_trailer'  => 'Above Trailer Section Placement',
+                'after_trailer'   => 'Below Trailer Section Placement',
+                'movie_content'   => 'Movie Overview / Description Bottom Placement',
+                'footer_above'    => 'Above Footer Placement'
+            ];
+            foreach ($defaultPlacements as $plKey => $plName) {
+                $insAd->execute([$plKey, $plName]);
+            }
+        }
     } catch (Exception $e) {
         // Continue silently if DB not connected yet
     }
@@ -400,3 +554,4 @@ function ensure_schema_updates() {
 
 // Run schema verification automatically on load
 ensure_schema_updates();
+

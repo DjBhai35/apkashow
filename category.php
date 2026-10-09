@@ -69,6 +69,65 @@ $pageCanonical = canonical_url_for('/category/' . urlencode($slug ?: 'all'));
 require_once __DIR__ . '/includes/header.php';
 ?>
 
+<!-- Schema.org CollectionPage & BreadcrumbList Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "<?php echo BASE_URL; ?>/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Categories",
+          "item": "<?php echo BASE_URL; ?>/category.php?slug=all"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": <?php echo json_encode($catDisplayTitle); ?>,
+          "item": <?php echo json_encode($pageCanonical); ?>
+        }
+      ]
+    },
+    {
+      "@type": "CollectionPage",
+      "name": <?php echo json_encode($pageTitle); ?>,
+      "description": <?php echo json_encode($pageDescription); ?>,
+      "url": <?php echo json_encode($pageCanonical); ?>,
+      "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": <?php echo (int)$totalMovies; ?>,
+        "itemListElement": [
+          <?php 
+          $cList = [];
+          if (!empty($movies)) {
+              foreach (array_slice($movies, 0, 10) as $idx => $mRow) {
+                  $cList[] = json_encode([
+                      '@type' => 'Movie',
+                      'position' => $idx + 1,
+                      'name' => $mRow['title'],
+                      'url' => BASE_URL . '/movie.php?slug=' . urlencode($mRow['slug']),
+                      'image' => resolve_image_url($mRow['poster'])
+                  ], JSON_UNESCAPED_SLASHES);
+              }
+          }
+          echo implode(',', $cList);
+          ?>
+        ]
+      }
+    }
+  ]
+}
+</script>
+
 <div class="container py-4">
 
     <!-- Category Header Breadcrumb & Info Banner -->

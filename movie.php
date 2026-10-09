@@ -90,25 +90,87 @@ $hasTrailer = $hasUploadedTrailer || $hasYoutubeTrailer;
 $movieHeroBackdrop = resolve_image_url(!empty($movie['banner']) ? $movie['banner'] : $movie['poster'], 'banner');
 ?>
 
-<!-- Schema.org Movie Structured Data for Google Rich Results -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Movie",
-  "name": <?php echo json_encode($movie['title']); ?>,
-  "image": <?php echo json_encode($pageImage); ?>,
-  "description": <?php echo json_encode($movie['short_description']); ?>,
-  "datePublished": "<?php echo e($movie['release_year']); ?>",
-  "genre": <?php echo json_encode(array_map('trim', explode(',', $movie['genre']))); ?>,
-  "inLanguage": <?php echo json_encode($movie['language']); ?>,
-  "duration": "<?php echo e($movie['duration']); ?>",
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "<?php echo e($movie['rating']); ?>",
-    "bestRating": "10",
-    "ratingCount": "<?php echo e($movie['views_count'] + 50); ?>"
-  }
+<?php
+// Construct Schema.org Graph items for Google Search Rich Results
+$schemaGraph = [
+    [
+        "@type" => "BreadcrumbList",
+        "itemListElement" => [
+            [
+                "@type" => "ListItem",
+                "position" => 1,
+                "name" => "Home",
+                "item" => BASE_URL . "/"
+            ]
+        ]
+    ]
+];
+
+if (!empty($movie['category_slug'])) {
+    $schemaGraph[0]['itemListElement'][] = [
+        "@type" => "ListItem",
+        "position" => 2,
+        "name" => $movie['category_name'],
+        "item" => BASE_URL . "/category.php?slug=" . urlencode($movie['category_slug'])
+    ];
+    $schemaGraph[0]['itemListElement'][] = [
+        "@type" => "ListItem",
+        "position" => 3,
+        "name" => $movie['title'],
+        "item" => $pageCanonical
+    ];
+} else {
+    $schemaGraph[0]['itemListElement'][] = [
+        "@type" => "ListItem",
+        "position" => 2,
+        "name" => $movie['title'],
+        "item" => $pageCanonical
+    ];
 }
+
+$movieSchema = [
+    "@type" => "Movie",
+    "name" => $movie['title'],
+    "url" => $pageCanonical,
+    "image" => array_values(array_unique([$pageImage, $movieHeroBackdrop])),
+    "description" => $movie['short_description'],
+    "datePublished" => !empty($movie['release_year']) ? (string)$movie['release_year'] : date('Y'),
+    "genre" => array_values(array_filter(array_map('trim', explode(',', $movie['genre'])))),
+    "inLanguage" => !empty($movie['language']) ? $movie['language'] : 'English',
+    "duration" => iso8601_duration($movie['duration'])
+];
+
+if (!empty($movie['rating']) && (float)$movie['rating'] > 0) {
+    $movieSchema["aggregateRating"] = [
+        "@type" => "AggregateRating",
+        "ratingValue" => (string)$movie['rating'],
+        "bestRating" => "10",
+        "ratingCount" => (string)max(1, (int)$movie['views_count'])
+    ];
+}
+
+if ($hasTrailer) {
+    $videoSchema = [
+        "@type" => "VideoObject",
+        "name" => $movie['title'] . " Official Trailer",
+        "description" => "Official trailer and preview for " . $movie['title'] . " on ApkaShow",
+        "thumbnailUrl" => [$movieHeroBackdrop, $pageImage],
+        "uploadDate" => (!empty($movie['created_at']) ? date('c', strtotime($movie['created_at'])) : ($movie['release_year'] . '-01-01T00:00:00+00:00')),
+        "duration" => iso8601_duration($movie['duration']),
+        "embedUrl" => $hasYoutubeTrailer ? $embedUrl : null,
+        "contentUrl" => $hasUploadedTrailer ? resolve_video_url($movie['trailer_file']) : null
+    ];
+    $videoSchema = array_filter($videoSchema);
+    $movieSchema["trailer"] = $videoSchema;
+    $schemaGraph[] = $videoSchema;
+}
+
+$schemaGraph[] = $movieSchema;
+?>
+
+<!-- Schema.org Movie, Trailer & Breadcrumb Structured Data for Google Rich Results -->
+<script type="application/ld+json">
+<?php echo json_encode(["@context" => "https://schema.org", "@graph" => $schemaGraph], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
 </script>
 
 <div class="container py-4">
@@ -129,9 +191,9 @@ $movieHeroBackdrop = resolve_image_url(!empty($movie['banner']) ? $movie['banner
         <div class="movie-detail-overlay"></div>
         <div class="movie-detail-content">
             <div class="row align-items-end g-4">
-                <!-- Movie Poster -->
+                <!-- Movie Poster with Explicit Dimensions for Core Web Vitals (Zero CLS) -->
                 <div class="col-md-auto d-none d-md-block">
-                    <img src="<?php echo e(resolve_image_url($movie['poster'])); ?>" alt="<?php echo e($movie['title']); ?> Poster" class="movie-detail-poster shadow-lg">
+                    <img src="<?php echo e(resolve_image_url($movie['poster'])); ?>" alt="<?php echo e($movie['title']); ?> Official Poster" class="movie-detail-poster shadow-lg" width="220" height="330">
                 </div>
                 <!-- Title & Meta -->
                 <div class="col-md">
@@ -190,6 +252,9 @@ $movieHeroBackdrop = resolve_image_url(!empty($movie['banner']) ? $movie['banner
             </div>
         </div>
     </div>
+
+    <!-- Ad Placement: Before Trailer -->
+    <?php echo render_ad_placement('before_trailer'); ?>
 
     <!-- Official Movie Trailer Section -->
     <div id="trailer-section" class="glass-card p-4 p-md-5 mb-5">
@@ -273,6 +338,9 @@ $movieHeroBackdrop = resolve_image_url(!empty($movie['banner']) ? $movie['banner
         </div>
     </div>
 
+    <!-- Ad Placement: After Trailer -->
+    <?php echo render_ad_placement('after_trailer'); ?>
+
     <!-- Movie Overview & Metadata Grid -->
     <div class="row g-4 mb-5">
         <!-- Left: Full About & Synopsis with Natural Inline Gallery Stills -->
@@ -282,6 +350,9 @@ $movieHeroBackdrop = resolve_image_url(!empty($movie['banner']) ? $movie['banner
                 <div class="text-light text-opacity-75 lh-lg mb-4">
                     <?php echo nl2br(e($movie['description'])); ?>
                 </div>
+
+                <!-- Ad Placement: Inside Movie Content -->
+                <?php echo render_ad_placement('movie_content'); ?>
 
                 <!-- Multiple Scene Images Inside Description / Gallery (2-4 Images) -->
                 <?php if (!empty($galleryImages)): ?>
@@ -299,7 +370,7 @@ $movieHeroBackdrop = resolve_image_url(!empty($movie['banner']) ? $movie['banner
                                 <div class="col-6 col-md-<?php echo (count($galleryImages) <= 2) ? '6' : ((count($galleryImages) === 3) ? '4' : '3'); ?>">
                                     <div class="gallery-still-card position-relative overflow-hidden rounded-3 border border-secondary border-opacity-25 h-100">
                                         <a href="<?php echo e($fullImgUrl); ?>" class="d-block gallery-lightbox-trigger" data-bs-toggle="modal" data-bs-target="#imageLightboxModal" data-img-src="<?php echo e($fullImgUrl); ?>" data-caption="<?php echo e($gImg['caption'] ?: ($movie['title'] . ' Scene ' . ($index + 1))); ?>">
-                                            <img src="<?php echo e($fullImgUrl); ?>" alt="<?php echo e($gImg['caption'] ?: ($movie['title'] . ' Still ' . ($index + 1))); ?>" class="w-100 gallery-thumb-img" loading="lazy">
+                                            <img src="<?php echo e($fullImgUrl); ?>" alt="<?php echo e($gImg['caption'] ?: ($movie['title'] . ' Still ' . ($index + 1))); ?>" class="w-100 gallery-thumb-img" loading="lazy" width="400" height="225">
                                             <div class="gallery-still-overlay">
                                                 <i class="bi bi-arrows-fullscreen text-white fs-5"></i>
                                             </div>

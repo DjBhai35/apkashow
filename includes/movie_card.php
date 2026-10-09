@@ -13,7 +13,7 @@ $movieDetailUrl = BASE_URL . '/movie.php?slug=' . urlencode($movie['slug']);
 <div class="col-6 col-md-4 col-lg-3 col-xl-2">
     <div class="movie-card">
         <div class="movie-poster-box">
-            <img src="<?php echo e($moviePoster); ?>" alt="<?php echo e($movie['title']); ?> Poster" class="movie-poster-img" loading="lazy">
+            <img src="<?php echo e($moviePoster); ?>" alt="<?php echo e($movie['title']); ?> (<?php echo e($movieYear); ?>) - Watch on ApkaShow" class="movie-poster-img" loading="lazy" width="300" height="450">
             
             <!-- Quality Badge -->
             <span class="movie-badge-top">4K HDR</span>

@@ -109,6 +109,9 @@ require_once __DIR__ . '/includes/header.php';
         </section>
     <?php endif; ?>
 
+    <!-- Ad Placement: Below Hero Banner -->
+    <?php echo render_ad_placement('below_hero'); ?>
+
     <!-- Category Pills Quick Filter Bar -->
     <section class="mb-5 overflow-auto pb-2">
         <div class="d-flex align-items-center gap-2 flex-nowrap">
@@ -167,6 +170,9 @@ require_once __DIR__ . '/includes/header.php';
             ?>
         </div>
     </section>
+
+    <!-- Ad Placement: Between Content Sections -->
+    <?php echo render_ad_placement('between_content'); ?>
 
     <!-- Section 3: Motivational & Mindset Movies -->
     <section class="mb-5">

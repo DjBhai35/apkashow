@@ -16,11 +16,12 @@ try {
     $db = getDB();
     $stmt = $db->prepare("SELECT id, title, slug, poster, release_year, genre 
                           FROM movies 
-                          WHERE status = 1 AND (title LIKE ? OR genre LIKE ? OR tags LIKE ?) 
-                          ORDER BY views_count DESC, id DESC 
+                          WHERE status = 1 AND (title LIKE ? OR genre LIKE ? OR tags LIKE ? OR language LIKE ? OR release_year LIKE ?) 
+                          ORDER BY (CASE WHEN title LIKE ? THEN 1 ELSE 2 END), views_count DESC, id DESC 
                           LIMIT 6");
     $term = '%' . $query . '%';
-    $stmt->execute([$term, $term, $term]);
+    $startsTerm = $query . '%';
+    $stmt->execute([$term, $term, $term, $term, $term, $startsTerm]);
     $results = $stmt->fetchAll();
 
     $payload = [];

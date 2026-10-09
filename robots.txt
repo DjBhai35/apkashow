@@ -1,9 +1,12 @@
 User-agent: *
 Allow: /
 
-# Prevent indexing admin panel and private directories
+# Disallow private, administrative and API endpoints from indexing
 Disallow: /admin/
 Disallow: /includes/
 Disallow: /database/
+Disallow: /api/
+Disallow: /install.php
 
+# Official XML Sitemap
 Sitemap: https://apkashow.com/sitemap.xml

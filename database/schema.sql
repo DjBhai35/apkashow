@@ -144,6 +144,39 @@ CREATE TABLE `contact_messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
+-- Table structure for `advertisements` (Custom Ads & Official Google AdSense Placements)
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `advertisements`;
+CREATE TABLE `advertisements` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `placement` VARCHAR(50) NOT NULL UNIQUE,
+  `title` VARCHAR(150) NOT NULL,
+  `ad_type` ENUM('disabled', 'custom', 'adsense') NOT NULL DEFAULT 'disabled',
+  `custom_heading` VARCHAR(150) NULL,
+  `custom_subheading` VARCHAR(255) NULL,
+  `custom_image` VARCHAR(255) NULL,
+  `custom_url` VARCHAR(255) NULL,
+  `custom_button_text` VARCHAR(50) DEFAULT 'Learn More',
+  `custom_whatsapp` VARCHAR(50) NULL,
+  `adsense_code` TEXT NULL,
+  `status` TINYINT(1) NOT NULL DEFAULT 0,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_placement` (`placement`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Seed Data: Configurable Policy-Conscious Ad Placements (7 Placements)
+-- --------------------------------------------------------
+INSERT INTO `advertisements` (`placement`, `title`, `ad_type`, `status`) VALUES
+('header_search', 'Header / Below Search Placement', 'disabled', 0),
+('below_hero', 'Below Hero Section Placement', 'disabled', 0),
+('between_content', 'Between Movie Sections Placement', 'disabled', 0),
+('before_trailer', 'Above Trailer Section Placement', 'disabled', 0),
+('after_trailer', 'Below Trailer Section Placement', 'disabled', 0),
+('movie_content', 'Movie Overview / Description Bottom Placement', 'disabled', 0),
+('footer_above', 'Above Footer Placement', 'disabled', 0);
+
+-- --------------------------------------------------------
 -- Seed Data: Site Settings & WhatsApp Configuration (apkashow.com)
 -- --------------------------------------------------------
 INSERT INTO `settings` (`key_name`, `key_value`) VALUES
