@@ -17,6 +17,15 @@ $totalMovies = 0;
 $totalPages = 0;
 
 if (!empty($q)) {
+    // Exact Movie Title Match: Directly lead to that movie's detail page
+    $exactStmt = $db->prepare("SELECT slug FROM `movies` WHERE status = 1 AND LOWER(TRIM(title)) = LOWER(TRIM(?)) LIMIT 1");
+    $exactStmt->execute([$q]);
+    $exactMovie = $exactStmt->fetch();
+    if ($exactMovie && !empty($exactMovie['slug'])) {
+        header("Location: " . BASE_URL . "/movie.php?slug=" . urlencode($exactMovie['slug']));
+        exit();
+    }
+
     $searchTerm = '%' . $q . '%';
     
     // Count Matching Rows

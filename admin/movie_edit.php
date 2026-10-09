@@ -34,9 +34,11 @@ $movie = [
     'meta_title' => '',
     'meta_description' => '',
     'meta_keywords' => '',
-    'canonical_url' => ''
+    'canonical_url' => '',
+    'trailer_file' => ''
 ];
 
+$existingImages = [];
 if ($isEditing) {
     $stmt = $db->prepare("SELECT * FROM `movies` WHERE `id` = ? LIMIT 1");
     $stmt->execute([$id]);
@@ -47,6 +49,10 @@ if ($isEditing) {
         exit();
     }
     $movie = array_merge($movie, $existing);
+
+    $imgStmt = $db->prepare("SELECT * FROM `movie_images` WHERE `movie_id` = ? ORDER BY `sort_order` ASC, `id` ASC");
+    $imgStmt->execute([$id]);
+    $existingImages = $imgStmt->fetchAll();
 }
 
 // Fetch all available categories
@@ -113,6 +119,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $banner = $movie['banner'];
         }
 
+        // Trailer File handling (Server Video Upload / Delete / Replace)
+        $trailerFile = $isEditing ? ($movie['trailer_file'] ?? '') : '';
+        if (!empty($_POST['delete_trailer']) && !empty($trailerFile)) {
+            $oldTrailerPath = SITE_ROOT . '/' . ltrim($trailerFile, '/');
+            if (file_exists($oldTrailerPath)) {
+                @unlink($oldTrailerPath);
+            }
+            $trailerFile = '';
+        }
+
+        if (!empty($_FILES['trailer_file']['name'])) {
+            $videoRes = upload_video_file($_FILES['trailer_file'], 'trailers');
+            if ($videoRes['success']) {
+                if (!empty($trailerFile)) {
+                    $oldTrailerPath = SITE_ROOT . '/' . ltrim($trailerFile, '/');
+                    if (file_exists($oldTrailerPath)) {
+                        @unlink($oldTrailerPath);
+                    }
+                }
+                $trailerFile = $videoRes['url'];
+            } else {
+                $errors[] = 'Trailer upload error: ' . $videoRes['error'];
+            }
+        }
+
         // Basic validations
         if (empty($title)) {
             $errors[] = 'Movie title is required.';
@@ -135,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         `title` = ?, `slug` = ?, `poster` = ?, `banner` = ?, 
                         `short_description` = ?, `description` = ?, `category_id` = ?, 
                         `genre` = ?, `language` = ?, `release_year` = ?, `duration` = ?, 
-                        `rating` = ?, `tags` = ?, `trailer_url` = ?, `watch_url` = ?, 
+                        `rating` = ?, `tags` = ?, `trailer_url` = ?, `trailer_file` = ?, `watch_url` = ?, 
                         `download_url` = ?, `is_featured` = ?, `is_popular` = ?, `status` = ?, 
                         `meta_title` = ?, `meta_description` = ?, `meta_keywords` = ?, 
                         `canonical_url` = ? 
@@ -145,36 +176,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $title, $slug, $poster, $banner, 
                         $shortDesc, $description, $categoryId, 
                         $genre, $language, $releaseYear, $duration, 
-                        $rating, $tags, $trailerUrl, $watchUrl, 
+                        $rating, $tags, $trailerUrl, $trailerFile, $watchUrl, 
                         $downloadUrl, $isFeatured, $isPopular, $status, 
                         $metaTitle, $metaDescription, $metaKeywords, 
                         $canonicalUrl, $id
                     ]);
+                    $movieId = $id;
                     set_flash('success', "Movie '{$title}' updated successfully.");
                 } else {
                     $insertSql = "INSERT INTO `movies` (
                         `title`, `slug`, `poster`, `banner`, 
                         `short_description`, `description`, `category_id`, 
                         `genre`, `language`, `release_year`, `duration`, 
-                        `rating`, `tags`, `trailer_url`, `watch_url`, 
+                        `rating`, `tags`, `trailer_url`, `trailer_file`, `watch_url`, 
                         `download_url`, `is_featured`, `is_popular`, `status`, 
                         `meta_title`, `meta_description`, `meta_keywords`, 
                         `canonical_url`
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     $inStmt = $db->prepare($insertSql);
                     $inStmt->execute([
                         $title, $slug, $poster, $banner, 
                         $shortDesc, $description, $categoryId, 
                         $genre, $language, $releaseYear, $duration, 
-                        $rating, $tags, $trailerUrl, $watchUrl, 
+                        $rating, $tags, $trailerUrl, $trailerFile, $watchUrl, 
                         $downloadUrl, $isFeatured, $isPopular, $status, 
                         $metaTitle, $metaDescription, $metaKeywords, 
                         $canonicalUrl
                     ]);
+                    $movieId = (int)$db->lastInsertId();
                     set_flash('success', "New movie '{$title}' created successfully.");
                 }
-                header("Location: " . BASE_URL . "/admin/movies.php");
-                exit();
+
+                // Handle Gallery Image Deletions
+                if (!empty($_POST['delete_images']) && is_array($_POST['delete_images'])) {
+                    foreach ($_POST['delete_images'] as $delImgId) {
+                        $delImgId = (int)$delImgId;
+                        $chkImg = $db->prepare("SELECT image_url FROM `movie_images` WHERE `id` = ? AND `movie_id` = ?");
+                        $chkImg->execute([$delImgId, $movieId]);
+                        $imgRow = $chkImg->fetch();
+                        if ($imgRow) {
+                            $imgPath = SITE_ROOT . '/' . ltrim($imgRow['image_url'], '/');
+                            if (file_exists($imgPath)) {
+                                @unlink($imgPath);
+                            }
+                            $delStmt = $db->prepare("DELETE FROM `movie_images` WHERE `id` = ? AND `movie_id` = ?");
+                            $delStmt->execute([$delImgId, $movieId]);
+                        }
+                    }
+                }
+
+                // Handle Existing Gallery Captions Update
+                if (!empty($_POST['existing_captions']) && is_array($_POST['existing_captions'])) {
+                    foreach ($_POST['existing_captions'] as $capId => $capVal) {
+                        $capId = (int)$capId;
+                        $capVal = trim($capVal);
+                        $upCap = $db->prepare("UPDATE `movie_images` SET `caption` = ? WHERE `id` = ? AND `movie_id` = ?");
+                        $upCap->execute([$capVal, $capId, $movieId]);
+                    }
+                }
+
+                // Handle New Gallery Images Upload (2-4 Images)
+                if (!empty($_FILES['gallery_images']['name']) && is_array($_FILES['gallery_images']['name'])) {
+                    $totalG = count($_FILES['gallery_images']['name']);
+                    for ($gi = 0; $gi < $totalG; $gi++) {
+                        if (empty($_FILES['gallery_images']['name'][$gi])) continue;
+                        $singleUpload = [
+                            'name' => $_FILES['gallery_images']['name'][$gi],
+                            'type' => $_FILES['gallery_images']['type'][$gi] ?? '',
+                            'tmp_name' => $_FILES['gallery_images']['tmp_name'][$gi],
+                            'error' => $_FILES['gallery_images']['error'][$gi],
+                            'size' => $_FILES['gallery_images']['size'][$gi]
+                        ];
+                        $gRes = upload_image_file($singleUpload, 'gallery');
+                        if ($gRes['success']) {
+                            $caption = trim($_POST['gallery_captions'][$gi] ?? '');
+                            $insG = $db->prepare("INSERT INTO `movie_images` (`movie_id`, `image_url`, `caption`, `sort_order`) VALUES (?, ?, ?, ?)");
+                            $insG->execute([$movieId, $gRes['url'], $caption, $gi]);
+                        } else {
+                            $errors[] = 'Gallery image error (' . e($singleUpload['name']) . '): ' . $gRes['error'];
+                        }
+                    }
+                }
+
+                if (empty($errors)) {
+                    header("Location: " . BASE_URL . "/admin/movies.php");
+                    exit();
+                }
             } catch (Exception $e) {
                 $errors[] = 'Database operation failed: ' . $e->getMessage();
             }
@@ -225,9 +312,50 @@ require_once __DIR__ . '/header.php';
                     <textarea name="short_description" class="form-control bg-dark border-secondary text-white" rows="2" placeholder="Brief 1-2 sentence hook for cards and search snippets..." required><?php echo e($movie['short_description']); ?></textarea>
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label text-light small fw-bold">Full Movie Description / About *</label>
                     <textarea name="description" class="form-control bg-dark border-secondary text-white" rows="6" placeholder="Detailed plot synopsis, themes, and background information..." required><?php echo e($movie['description']); ?></textarea>
+                </div>
+
+                <!-- Multiple Scene Images Inside Description / Gallery (2-4 Images) -->
+                <div class="border-top border-secondary border-opacity-25 pt-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <label class="form-label text-light small fw-bold mb-0">
+                            <i class="bi bi-images text-danger me-1"></i> Scene Stills & Description Gallery (2–4 Images)
+                        </label>
+                        <span class="badge bg-secondary small">Responsive in Content</span>
+                    </div>
+                    <p class="text-muted small mb-3">Upload approximately 2 to 4 scene stills or behind-the-scenes images to display naturally inside the movie overview on the detail page.</p>
+
+                    <?php if (!empty($existingImages)): ?>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary small fw-bold">Current Attached Stills:</label>
+                            <div class="row g-3">
+                                <?php foreach ($existingImages as $img): ?>
+                                    <div class="col-6 col-sm-4 col-md-3">
+                                        <div class="p-2 rounded bg-dark border border-secondary text-center h-100 d-flex flex-column justify-content-between">
+                                            <div>
+                                                <img src="<?php echo e(resolve_image_url($img['image_url'])); ?>" class="rounded w-100 mb-2 shadow-sm" style="height: 85px; object-fit: cover;">
+                                                <input type="text" name="existing_captions[<?php echo $img['id']; ?>]" value="<?php echo e($img['caption']); ?>" class="form-control form-control-sm bg-dark border-secondary text-white mb-2" placeholder="Caption (optional)">
+                                            </div>
+                                            <div class="form-check text-start ps-4">
+                                                <input class="form-check-input" type="checkbox" name="delete_images[]" value="<?php echo $img['id']; ?>" id="delImg<?php echo $img['id']; ?>">
+                                                <label class="form-check-label text-danger small fw-semibold" for="delImg<?php echo $img['id']; ?>">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="mb-2">
+                        <label class="form-label text-light small fw-bold">Upload New Scene Stills (Select 1 or multiple, JPG/PNG/WEBP)</label>
+                        <input type="file" name="gallery_images[]" class="form-control bg-dark border-secondary text-white" multiple accept="image/*">
+                        <div class="form-text text-muted small">You can select multiple images at once (up to 4 images recommended). Automatically resized and optimized.</div>
+                    </div>
                 </div>
             </div>
 
@@ -235,10 +363,42 @@ require_once __DIR__ . '/header.php';
             <div class="glass-card p-4 mb-4">
                 <h5 class="fw-bold text-white mb-3">Streaming & Legal Distribution Media</h5>
 
+                <!-- Uploaded Trailer File Option -->
+                <div class="p-3 mb-4 rounded-3 bg-dark border border-secondary border-opacity-50">
+                    <label class="form-label text-light small fw-bold d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-file-earmark-play-fill text-danger me-1"></i> Upload Movie Trailer Video (Server File: MP4, WebM)</span>
+                        <span class="badge bg-danger bg-opacity-75">Direct Video</span>
+                    </label>
+                    <input type="file" name="trailer_file" class="form-control bg-dark border-secondary text-white mb-2" accept="video/mp4,video/webm">
+                    <div class="form-text text-muted small mb-2">Upload a short movie trailer (1–10 minutes, MP4/WebM). Stored securely and played in high-performance HTML5 player.</div>
+
+                    <?php if (!empty($movie['trailer_file'])): ?>
+                        <div class="p-2 rounded bg-dark border border-secondary border-opacity-50 mt-2">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="text-success small fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Current Trailer File: <code><?php echo e(basename($movie['trailer_file'])); ?></code></span>
+                                <a href="<?php echo e(resolve_video_url($movie['trailer_file'])); ?>" target="_blank" class="btn btn-outline-info btn-sm py-0 px-2" style="font-size: 0.75rem;">Test Play</a>
+                            </div>
+                            <video controls class="w-100 rounded" style="max-height: 140px; background: #000;">
+                                <source src="<?php echo e(resolve_video_url($movie['trailer_file'])); ?>" type="video/mp4">
+                                Your browser does not support HTML5 video.
+                            </video>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="delete_trailer" id="deleteTrailerCheck" value="1">
+                                <label class="form-check-label text-danger small fw-semibold" for="deleteTrailerCheck">
+                                    <i class="bi bi-trash3 me-1"></i> Delete this uploaded trailer (or upload a new file above to replace it)
+                                </label>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- YouTube / External Trailer Embed -->
                 <div class="mb-3">
-                    <label class="form-label text-light small fw-bold">Trailer Embed / Video URL (YouTube, Vimeo, MP4)</label>
-                    <input type="text" name="trailer_url" class="form-control bg-dark border-secondary text-white" value="<?php echo e($movie['trailer_url']); ?>" placeholder="https://www.youtube.com/embed/iszwuX1AK6A or watch URL">
-                    <div class="form-text text-muted small">Supports YouTube links (automatically converted to player embed).</div>
+                    <label class="form-label text-light small fw-bold">
+                        <i class="bi bi-youtube text-danger me-1"></i> YouTube Trailer / Embed Video URL
+                    </label>
+                    <input type="text" name="trailer_url" class="form-control bg-dark border-secondary text-white" value="<?php echo e($movie['trailer_url']); ?>" placeholder="https://www.youtube.com/watch?v=iszwuX1AK6A or embed URL">
+                    <div class="form-text text-muted small">Both uploaded trailer and YouTube embed work! If both exist, visitors can choose either on the detail page.</div>
                 </div>
 
                 <div class="mb-3">

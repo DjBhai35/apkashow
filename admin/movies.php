@@ -11,6 +11,25 @@ $db = getDB();
 if (isset($_GET['action']) && $_GET['action'] === 'delete') {
     $deleteId = (int)($_GET['id'] ?? 0);
     if ($deleteId > 0 && verify_csrf_token($_GET['token'] ?? '')) {
+        // Clean up trailer file from disk if exists
+        try {
+            $movStmt = $db->prepare("SELECT trailer_file FROM `movies` WHERE `id` = ?");
+            $movStmt->execute([$deleteId]);
+            $mRow = $movStmt->fetch();
+            if (!empty($mRow['trailer_file'])) {
+                $tPath = SITE_ROOT . '/' . ltrim($mRow['trailer_file'], '/');
+                if (file_exists($tPath)) @unlink($tPath);
+            }
+            // Clean up gallery images from disk
+            $imgsStmt = $db->prepare("SELECT image_url FROM `movie_images` WHERE `movie_id` = ?");
+            $imgsStmt->execute([$deleteId]);
+            $allImgs = $imgsStmt->fetchAll();
+            foreach ($allImgs as $img) {
+                $iPath = SITE_ROOT . '/' . ltrim($img['image_url'], '/');
+                if (file_exists($iPath)) @unlink($iPath);
+            }
+        } catch(Exception $e) {}
+
         $delStmt = $db->prepare("DELETE FROM `movies` WHERE `id` = ?");
         $delStmt->execute([$deleteId]);
         set_flash('success', 'Movie deleted successfully from catalog.');

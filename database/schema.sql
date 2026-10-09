@@ -74,6 +74,7 @@ CREATE TABLE `movies` (
   `rating` DECIMAL(3,1) DEFAULT 8.5,
   `tags` VARCHAR(255) NULL,
   `trailer_url` VARCHAR(255) NULL,
+  `trailer_file` VARCHAR(255) NULL,
   `watch_url` VARCHAR(255) NULL,
   `download_url` VARCHAR(255) NULL,
   `is_featured` TINYINT(1) NOT NULL DEFAULT 0,
@@ -91,6 +92,21 @@ CREATE TABLE `movies` (
   INDEX `idx_featured` (`is_featured`),
   INDEX `idx_status` (`status`),
   CONSTRAINT `fk_movies_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for `movie_images` (Content & Description Stills)
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `movie_images`;
+CREATE TABLE `movie_images` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `movie_id` INT NOT NULL,
+  `image_url` VARCHAR(255) NOT NULL,
+  `caption` VARCHAR(255) NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_movie_id` (`movie_id`),
+  CONSTRAINT `fk_movie_images_movie` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------

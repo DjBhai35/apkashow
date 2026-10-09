@@ -204,11 +204,143 @@ function upload_image_file($fileArray, $targetFolder = 'movies', $maxBytes = 524
 
     $destPath = $targetDir . $fileName;
     if (move_uploaded_file($fileArray['tmp_name'], $destPath)) {
+        optimize_image_if_possible($destPath, $mime);
         $relativeUrl = 'assets/uploads/' . trim($targetFolder, '/') . '/' . $fileName;
         return ['success' => true, 'url' => $relativeUrl, 'fileName' => $fileName];
     }
 
     return ['success' => false, 'error' => 'Failed to move uploaded file to destination. Please check folder permissions.'];
+}
+
+/**
+ * Optimize / Resize uploaded image if GD library is available
+ */
+function optimize_image_if_possible($filePath, $mime, $maxWidth = 1920) {
+    if (!extension_loaded('gd') || !function_exists('getimagesize')) {
+        return;
+    }
+    $info = @getimagesize($filePath);
+    if (!$info) return;
+    list($width, $height) = $info;
+    if ($width <= $maxWidth) {
+        return;
+    }
+    $newWidth = $maxWidth;
+    $newHeight = (int)round(($height / $width) * $newWidth);
+
+    $src = null;
+    switch ($mime) {
+        case 'image/jpeg':
+            $src = @imagecreatefromjpeg($filePath);
+            break;
+        case 'image/png':
+            $src = @imagecreatefrompng($filePath);
+            break;
+        case 'image/webp':
+            if (function_exists('imagecreatefromwebp')) {
+                $src = @imagecreatefromwebp($filePath);
+            }
+            break;
+    }
+    if (!$src) return;
+
+    $dst = imagecreatetruecolor($newWidth, $newHeight);
+    if ($mime === 'image/png' || $mime === 'image/webp') {
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+    }
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+    switch ($mime) {
+        case 'image/jpeg':
+            imagejpeg($dst, $filePath, 88);
+            break;
+        case 'image/png':
+            imagepng($dst, $filePath, 8);
+            break;
+        case 'image/webp':
+            imagewebp($dst, $filePath, 88);
+            break;
+    }
+    imagedestroy($src);
+    imagedestroy($dst);
+}
+
+/**
+ * Secure Video File Uploader (MP4, WebM)
+ * Supports common trailer video formats, 1-10 minutes, up to server limit
+ */
+function upload_video_file($fileArray, $targetFolder = 'trailers', $maxBytes = 104857600) {
+    if (empty($fileArray) || $fileArray['error'] !== UPLOAD_ERR_OK) {
+        $errorCode = $fileArray['error'] ?? UPLOAD_ERR_NO_FILE;
+        switch ($errorCode) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                $errorMsg = 'Video file exceeds the server upload limit. Please check php.ini (upload_max_filesize and post_max_size).';
+                break;
+            case UPLOAD_ERR_PARTIAL:
+                $errorMsg = 'Video file was only partially uploaded. Please try again.';
+                break;
+            case UPLOAD_ERR_NO_FILE:
+                $errorMsg = 'No video file was uploaded.';
+                break;
+            default:
+                $errorMsg = 'Video upload error (Code: ' . $errorCode . ').';
+                break;
+        }
+        return ['success' => false, 'error' => $errorMsg];
+    }
+
+    if ($fileArray['size'] > $maxBytes) {
+        return ['success' => false, 'error' => 'Video size exceeds maximum allowed limit (' . round($maxBytes / (1024 * 1024)) . 'MB).'];
+    }
+
+    $clientExt = strtolower(pathinfo($fileArray['name'], PATHINFO_EXTENSION));
+    $allowedExts = ['mp4' => 'mp4', 'webm' => 'webm', 'm4v' => 'mp4', 'mov' => 'mp4'];
+
+    if (!array_key_exists($clientExt, $allowedExts)) {
+        return ['success' => false, 'error' => 'Invalid video format (.' . e($clientExt) . '). Only MP4 and WebM videos are supported.'];
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($fileArray['tmp_name']);
+    $allowedMimes = [
+        'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v',
+        'application/octet-stream'
+    ];
+
+    if (!in_array($mime, $allowedMimes)) {
+        return ['success' => false, 'error' => 'Invalid video file type (' . e($mime) . '). Only MP4 and WebM are permitted.'];
+    }
+
+    $extension = $allowedExts[$clientExt];
+    $fileName = 'trailer_' . time() . '_' . bin2hex(random_bytes(6)) . '.' . $extension;
+    $targetDir = SITE_ROOT . '/assets/uploads/' . trim($targetFolder, '/') . '/';
+
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0755, true);
+    }
+
+    $destPath = $targetDir . $fileName;
+    if (move_uploaded_file($fileArray['tmp_name'], $destPath)) {
+        $relativeUrl = 'assets/uploads/' . trim($targetFolder, '/') . '/' . $fileName;
+        return ['success' => true, 'url' => $relativeUrl, 'fileName' => $fileName];
+    }
+
+    return ['success' => false, 'error' => 'Failed to save trailer file. Please check folder permissions for assets/uploads/' . $targetFolder . '.'];
+}
+
+/**
+ * Resolve Video URL (Handles local upload or remote URL)
+ */
+function resolve_video_url($url) {
+    if (empty($url)) {
+        return '';
+    }
+    if (preg_match('#^https?://#i', $url)) {
+        return $url;
+    }
+    return BASE_URL . '/' . ltrim($url, '/');
 }
 
 /**
@@ -233,3 +365,38 @@ function resolve_image_url($url, $placeholder = 'poster') {
 function canonical_url_for($path) {
     return CANONICAL_DOMAIN . '/' . ltrim($path, '/');
 }
+
+/**
+ * Automatically ensure new columns and tables exist without breaking existing databases
+ */
+function ensure_schema_updates() {
+    static $checked = false;
+    if ($checked) return;
+    $checked = true;
+
+    try {
+        $db = getDB();
+        // Check if trailer_file column exists in movies
+        $stmt = $db->query("SHOW COLUMNS FROM `movies` LIKE 'trailer_file'");
+        $col = $stmt->fetch();
+        if (!$col) {
+            $db->exec("ALTER TABLE `movies` ADD COLUMN `trailer_file` VARCHAR(255) NULL AFTER `trailer_url`");
+        }
+
+        // Ensure movie_images table exists
+        $db->exec("CREATE TABLE IF NOT EXISTS `movie_images` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `movie_id` INT NOT NULL,
+            `image_url` VARCHAR(255) NOT NULL,
+            `caption` VARCHAR(255) NULL,
+            `sort_order` INT NOT NULL DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX `idx_movie_id` (`movie_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+    } catch (Exception $e) {
+        // Continue silently if DB not connected yet
+    }
+}
+
+// Run schema verification automatically on load
+ensure_schema_updates();

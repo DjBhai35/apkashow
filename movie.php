@@ -55,6 +55,11 @@ $relStmt = $db->prepare("SELECT * FROM `movies`
 $relStmt->execute([$movie['category_id'], $movie['id']]);
 $relatedMovies = $relStmt->fetchAll();
 
+// Fetch Associated Gallery Images (2-4 Scene Stills)
+$galleryStmt = $db->prepare("SELECT * FROM `movie_images` WHERE `movie_id` = ? ORDER BY `sort_order` ASC, `id` ASC");
+$galleryStmt->execute([$movie['id']]);
+$galleryImages = $galleryStmt->fetchAll();
+
 // Dynamic SEO Configurations
 $pageTitle = !empty($movie['meta_title']) ? $movie['meta_title'] : ($movie['title'] . ' (' . $movie['release_year'] . ') - Watch Online & Full Movie Info | ApkaShow');
 $pageDescription = !empty($movie['meta_description']) ? $movie['meta_description'] : ($movie['short_description']);
@@ -65,7 +70,7 @@ $isMovieDetail = true;
 
 require_once __DIR__ . '/includes/header.php';
 
-// Prepare video streaming embed source
+// Prepare video streaming embed source (YouTube)
 $embedUrl = '';
 if (!empty($movie['trailer_url'])) {
     if (strpos($movie['trailer_url'], 'youtube.com/watch?v=') !== false) {
@@ -77,6 +82,12 @@ if (!empty($movie['trailer_url'])) {
         $embedUrl = $movie['trailer_url'];
     }
 }
+
+// Trailer Availability Checks
+$hasUploadedTrailer = !empty($movie['trailer_file']);
+$hasYoutubeTrailer = !empty($embedUrl);
+$hasTrailer = $hasUploadedTrailer || $hasYoutubeTrailer;
+$movieHeroBackdrop = resolve_image_url(!empty($movie['banner']) ? $movie['banner'] : $movie['poster'], 'banner');
 ?>
 
 <!-- Schema.org Movie Structured Data for Google Rich Results -->
@@ -113,8 +124,8 @@ if (!empty($movie['trailer_url'])) {
         </ol>
     </nav>
 
-    <!-- Movie Hero Showcase -->
-    <div class="movie-detail-hero" style="background-image: url('<?php echo e(resolve_image_url($movie['banner'] ?: $movie['poster'], 'banner')); ?>');">
+    <!-- Movie Hero Showcase (Prominently displaying this movie's own banner/poster) -->
+    <div class="movie-detail-hero" style="background-image: url('<?php echo e($movieHeroBackdrop); ?>');">
         <div class="movie-detail-overlay"></div>
         <div class="movie-detail-content">
             <div class="row align-items-end g-4">
@@ -147,12 +158,21 @@ if (!empty($movie['trailer_url'])) {
                         <?php echo e($movie['short_description']); ?>
                     </p>
 
-                    <!-- Primary Actions -->
+                    <!-- Primary Actions: Trailer is clearly labeled as Trailer -->
                     <div class="d-flex flex-wrap gap-3">
-                        <a href="#player-section" class="btn btn-cinema px-4 py-2">
-                            <i class="bi bi-play-circle-fill fs-5"></i>
-                            <span>Watch Movie</span>
-                        </a>
+                        <?php if ($hasTrailer): ?>
+                            <a href="#trailer-section" class="btn btn-cinema px-4 py-2">
+                                <i class="bi bi-play-circle-fill fs-5"></i>
+                                <span>Watch Trailer</span>
+                            </a>
+                        <?php endif; ?>
+
+                        <?php if (!empty($movie['watch_url'])): ?>
+                            <a href="<?php echo e($movie['watch_url']); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-danger px-4 py-2">
+                                <i class="bi bi-film fs-5"></i>
+                                <span>Watch Full Movie</span>
+                            </a>
+                        <?php endif; ?>
 
                         <?php if (!empty($movie['download_url'])): ?>
                             <a href="<?php echo e($movie['download_url']); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-cinema-outline px-4 py-2">
@@ -171,29 +191,76 @@ if (!empty($movie['trailer_url'])) {
         </div>
     </div>
 
-    <!-- Video Player Section (Trailer & Legal Stream) -->
-    <div id="player-section" class="glass-card p-4 p-md-5 mb-5">
+    <!-- Official Movie Trailer Section -->
+    <div id="trailer-section" class="glass-card p-4 p-md-5 mb-5">
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
             <div>
-                <h3 class="fw-bold text-white mb-1"><i class="bi bi-broadcast text-danger me-2"></i>Cinematic Streaming Player</h3>
-                <small class="text-muted">High-bitrate legal stream & trailer player in full HD</small>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-danger rounded-pill px-3 py-1 text-uppercase">Trailer</span>
+                    <h3 class="fw-bold text-white mb-0"><i class="bi bi-play-btn-fill text-danger me-2"></i>Official Movie Trailer</h3>
+                </div>
+                <small class="text-light text-opacity-75">Watch high-definition trailer and preview scenes for <?php echo e($movie['title']); ?></small>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm" onclick="location.reload();">
-                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Stream
-                </button>
-            </div>
+
+            <?php if ($hasUploadedTrailer && $hasYoutubeTrailer): ?>
+                <!-- Toggle between Server Trailer and YouTube Embed -->
+                <div class="btn-group shadow-sm" role="group" aria-label="Trailer Source Selector">
+                    <button type="button" class="btn btn-cinema btn-sm px-3" id="btnSwitchUploaded" onclick="switchTrailerSource('uploaded')">
+                        <i class="bi bi-file-earmark-play-fill me-1"></i> HD Server Trailer
+                    </button>
+                    <button type="button" class="btn btn-outline-light btn-sm px-3" id="btnSwitchYoutube" onclick="switchTrailerSource('youtube')">
+                        <i class="bi bi-youtube text-danger me-1"></i> YouTube Trailer
+                    </button>
+                </div>
+            <?php endif; ?>
         </div>
 
-        <?php if (!empty($embedUrl)): ?>
+        <?php if ($hasUploadedTrailer && $hasYoutubeTrailer): ?>
+            <!-- Dual Trailer Players -->
+            <div id="uploadedTrailerBox" class="player-wrapper mb-3">
+                <video controls controlsList="nodownload" preload="metadata" poster="<?php echo e($movieHeroBackdrop); ?>" class="w-100 h-100">
+                    <source src="<?php echo e(resolve_video_url($movie['trailer_file'])); ?>" type="video/mp4">
+                    Your browser does not support HTML5 video player.
+                </video>
+            </div>
+            <div id="youtubeTrailerBox" class="player-wrapper mb-3 d-none">
+                <iframe id="youtubeIframe" src="<?php echo e($embedUrl); ?>" title="<?php echo e($movie['title']); ?> YouTube Trailer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+        <?php elseif ($hasUploadedTrailer): ?>
+            <!-- Uploaded Video Trailer Player -->
             <div class="player-wrapper mb-3">
-                <iframe src="<?php echo e($embedUrl); ?>" title="<?php echo e($movie['title']); ?> Player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                <video controls controlsList="nodownload" preload="metadata" poster="<?php echo e($movieHeroBackdrop); ?>" class="w-100 h-100">
+                    <source src="<?php echo e(resolve_video_url($movie['trailer_file'])); ?>" type="video/mp4">
+                    Your browser does not support HTML5 video player.
+                </video>
+            </div>
+        <?php elseif ($hasYoutubeTrailer): ?>
+            <!-- YouTube Trailer Embed Player -->
+            <div class="player-wrapper mb-3">
+                <iframe src="<?php echo e($embedUrl); ?>" title="<?php echo e($movie['title']); ?> Official Trailer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
             </div>
         <?php else: ?>
-            <div class="text-center py-5 bg-dark rounded-4">
-                <i class="bi bi-play-slash fs-1 text-secondary mb-3 d-block"></i>
-                <h5 class="text-white">Direct Stream Coming Soon</h5>
-                <p class="text-secondary small">This title's digital rights are being synced with our media nodes.</p>
+            <!-- No Trailer Available Notice -->
+            <div class="text-center py-5 bg-dark rounded-4 border border-secondary border-opacity-25">
+                <i class="bi bi-film fs-1 text-secondary mb-3 d-block"></i>
+                <h5 class="text-white">Official Trailer Available Soon</h5>
+                <p class="text-secondary small mb-0">The promotional trailer for <?php echo e($movie['title']); ?> is being processed by our media distribution nodes.</p>
+            </div>
+        <?php endif; ?>
+
+        <!-- Dedicated Full Movie Stream Callout if watch_url exists -->
+        <?php if (!empty($movie['watch_url'])): ?>
+            <div class="p-3 mt-3 rounded-3 bg-dark border border-danger border-opacity-50 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="fs-2 text-danger"><i class="bi bi-film"></i></div>
+                    <div>
+                        <h6 class="text-white fw-bold mb-0">Stream Full Feature Film</h6>
+                        <small class="text-light text-opacity-75">Ready for the entire movie? Access the full stream via our legal distributor stream node.</small>
+                    </div>
+                </div>
+                <a href="<?php echo e($movie['watch_url']); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-danger btn-sm px-4 py-2 text-nowrap fw-bold">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Watch Full Movie
+                </a>
             </div>
         <?php endif; ?>
 
@@ -208,13 +275,46 @@ if (!empty($movie['trailer_url'])) {
 
     <!-- Movie Overview & Metadata Grid -->
     <div class="row g-4 mb-5">
-        <!-- Left: Full About & Synopsis -->
+        <!-- Left: Full About & Synopsis with Natural Inline Gallery Stills -->
         <div class="col-lg-8">
             <div class="glass-card p-4 p-md-5 h-100">
                 <h3 class="fw-bold text-white mb-3">About the Film</h3>
                 <div class="text-light text-opacity-75 lh-lg mb-4">
                     <?php echo nl2br(e($movie['description'])); ?>
                 </div>
+
+                <!-- Multiple Scene Images Inside Description / Gallery (2-4 Images) -->
+                <?php if (!empty($galleryImages)): ?>
+                    <div class="mt-4 pt-4 border-top border-secondary border-opacity-25">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h4 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-images text-danger"></i> Scene Stills & Production Highlights
+                            </h4>
+                            <span class="badge bg-secondary bg-opacity-50 small"><?php echo count($galleryImages); ?> Photos</span>
+                        </div>
+                        <p class="text-light text-opacity-75 small mb-3">High-resolution scene captures and cinematography moments from <?php echo e($movie['title']); ?>.</p>
+                        <div class="row g-3">
+                            <?php foreach ($galleryImages as $index => $gImg): ?>
+                                <?php $fullImgUrl = resolve_image_url($gImg['image_url']); ?>
+                                <div class="col-6 col-md-<?php echo (count($galleryImages) <= 2) ? '6' : ((count($galleryImages) === 3) ? '4' : '3'); ?>">
+                                    <div class="gallery-still-card position-relative overflow-hidden rounded-3 border border-secondary border-opacity-25 h-100">
+                                        <a href="<?php echo e($fullImgUrl); ?>" class="d-block gallery-lightbox-trigger" data-bs-toggle="modal" data-bs-target="#imageLightboxModal" data-img-src="<?php echo e($fullImgUrl); ?>" data-caption="<?php echo e($gImg['caption'] ?: ($movie['title'] . ' Scene ' . ($index + 1))); ?>">
+                                            <img src="<?php echo e($fullImgUrl); ?>" alt="<?php echo e($gImg['caption'] ?: ($movie['title'] . ' Still ' . ($index + 1))); ?>" class="w-100 gallery-thumb-img" loading="lazy">
+                                            <div class="gallery-still-overlay">
+                                                <i class="bi bi-arrows-fullscreen text-white fs-5"></i>
+                                            </div>
+                                        </a>
+                                        <?php if (!empty($gImg['caption'])): ?>
+                                            <div class="p-2 bg-dark bg-opacity-75 text-light small text-truncate text-center">
+                                                <?php echo e($gImg['caption']); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
 
                 <!-- Tags / Keywords -->
                 <?php if (!empty($movie['tags'])): ?>
@@ -306,6 +406,61 @@ if (!empty($movie['trailer_url'])) {
         </section>
     <?php endif; ?>
 
+    <!-- Full-resolution Image Lightbox Modal -->
+    <div class="modal fade" id="imageLightboxModal" tabindex="-1" aria-labelledby="imageLightboxLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary py-2">
+                    <h6 class="modal-title text-white small" id="imageLightboxLabel"><?php echo e($movie['title']); ?> - Scene Still</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 text-center bg-black">
+                    <img id="lightboxModalImg" src="" alt="Scene Preview" class="img-fluid" style="max-height: 80vh; object-fit: contain;">
+                </div>
+                <div class="modal-footer border-secondary py-2 justify-content-between">
+                    <small class="text-secondary" id="lightboxModalCaption"></small>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+function switchTrailerSource(source) {
+    const upBox = document.getElementById('uploadedTrailerBox');
+    const ytBox = document.getElementById('youtubeTrailerBox');
+    const btnUp = document.getElementById('btnSwitchUploaded');
+    const btnYt = document.getElementById('btnSwitchYoutube');
+    if (!upBox || !ytBox) return;
+
+    if (source === 'uploaded') {
+        upBox.classList.remove('d-none');
+        ytBox.classList.add('d-none');
+        if (btnUp) btnUp.className = 'btn btn-cinema btn-sm px-3';
+        if (btnYt) btnYt.className = 'btn btn-outline-light btn-sm px-3';
+    } else {
+        upBox.classList.add('d-none');
+        ytBox.classList.remove('d-none');
+        if (btnUp) btnUp.className = 'btn btn-outline-light btn-sm px-3';
+        if (btnYt) btnYt.className = 'btn btn-cinema btn-sm px-3';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const triggers = document.querySelectorAll('.gallery-lightbox-trigger');
+    const modalImg = document.getElementById('lightboxModalImg');
+    const modalCap = document.getElementById('lightboxModalCaption');
+    triggers.forEach(trig => {
+        trig.addEventListener('click', () => {
+            const src = trig.getAttribute('data-img-src');
+            const caption = trig.getAttribute('data-caption') || '';
+            if (modalImg) modalImg.src = src;
+            if (modalCap) modalCap.textContent = caption;
+        });
+    });
+});
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
